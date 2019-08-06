@@ -1,9 +1,17 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
-import javax.persistence.*;
-import java.sql.Timestamp;
 import java.math.BigInteger;
+import java.sql.Timestamp;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 
 /**
@@ -18,40 +26,42 @@ public class UserActivity implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="user_act_id")
-	private Long userActId;
+	@Column(name="user_act_id", unique=true, nullable=false)
+	private BigInteger userActId;
 
-	@Lob
-	private String action;
+	@Column(name="create_date_time", nullable=false)
+	private Timestamp createDateTime;
 
-	@Column(name="cycle_id")
+	@Column(name="cycle_id", nullable=false)
 	private BigInteger cycleId;
 
-	@Column(name="silo_id")
+	@Column(name="silo_id", nullable=false)
 	private BigInteger siloId;
 
-	private Timestamp timestamp;
+	@Lob
+	@Column(name="user_action_details", nullable=false)
+	private String userActionDetails;
 
-	@Column(name="user_name")
+	@Column(name="user_name", nullable=false, length=50)
 	private String userName;
 
 	public UserActivity() {
 	}
 
-	public Long getUserActId() {
+	public BigInteger getUserActId() {
 		return this.userActId;
 	}
 
-	public void setUserActId(Long userActId) {
+	public void setUserActId(BigInteger userActId) {
 		this.userActId = userActId;
 	}
 
-	public String getAction() {
-		return this.action;
+	public Timestamp getCreateDateTime() {
+		return this.createDateTime;
 	}
 
-	public void setAction(String action) {
-		this.action = action;
+	public void setCreateDateTime(Timestamp createDateTime) {
+		this.createDateTime = createDateTime;
 	}
 
 	public BigInteger getCycleId() {
@@ -70,12 +80,12 @@ public class UserActivity implements Serializable {
 		this.siloId = siloId;
 	}
 
-	public Timestamp getTimestamp() {
-		return this.timestamp;
+	public String getUserActionDetails() {
+		return this.userActionDetails;
 	}
 
-	public void setTimestamp(Timestamp timestamp) {
-		this.timestamp = timestamp;
+	public void setUserActionDetails(String userActionDetails) {
+		this.userActionDetails = userActionDetails;
 	}
 
 	public String getUserName() {

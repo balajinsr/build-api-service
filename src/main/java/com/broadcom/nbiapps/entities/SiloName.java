@@ -26,7 +26,7 @@ public class SiloName implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="silo_id")
+	@Column(name="silo_id", nullable=false)
 	private Long siloId;
 
 	@Embedded

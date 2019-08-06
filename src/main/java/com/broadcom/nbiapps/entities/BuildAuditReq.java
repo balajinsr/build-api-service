@@ -14,10 +14,10 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class BuildAuditReq {
-	@Column(name="silo_id")
+	@Column(name="silo_id",  unique=true, nullable=false)
 	private BigInteger siloId;
 	
-	@Column(name="build_number")
+	@Column(name="build_number" , nullable=false)
 	private BigInteger buildNumber;
 	
 	

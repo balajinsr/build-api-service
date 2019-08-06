@@ -12,7 +12,7 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class SiloNameReq {
-	@Column(name="silo_name")
+	@Column(name="silo_name", nullable=false, length=50)
 	private String siloName;
 
 	public String getSiloName() {

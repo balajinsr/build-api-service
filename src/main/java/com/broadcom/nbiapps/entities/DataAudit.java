@@ -1,8 +1,15 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.math.BigInteger;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 
 /**
@@ -17,31 +24,32 @@ public class DataAudit implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="data_audit_id")
-	private Long dataAuditId;
+	@Column(name="data_audit_id" , unique=true, nullable=false)
+	private BigInteger dataAuditId;
 
+	@Column(nullable=false, length=1)
 	private String action;
 
-	@Column(name="build_number")
+	@Column(name="build_number", nullable=false)
 	private BigInteger buildNumber;
 
-	@Column(name="file_path")
+	@Column(name="file_path", nullable=false, length=500)
 	private String filePath;
 
-	@Column(name="md5_value")
+	@Column(name="md5_value", length=50)
 	private String md5Value;
 
-	@Column(name="silo_id")
+	@Column(name="silo_id", nullable=false)
 	private BigInteger siloId;
 
 	public DataAudit() {
 	}
 
-	public Long getDataAuditId() {
+	public BigInteger getDataAuditId() {
 		return this.dataAuditId;
 	}
 
-	public void setDataAuditId(Long dataAuditId) {
+	public void setDataAuditId(BigInteger dataAuditId) {
 		this.dataAuditId = dataAuditId;
 	}
 

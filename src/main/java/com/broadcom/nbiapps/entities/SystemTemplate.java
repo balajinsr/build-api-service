@@ -1,7 +1,15 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
-import javax.persistence.*;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 
 /**
@@ -16,16 +24,20 @@ public class SystemTemplate implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="template_id")
+	@Column(name="template_id", unique=true, nullable=false)
 	private Long templateId;
 
 	@Lob
+	@Column(nullable=false)
 	private String body;
 
+	@Column(length=1)
 	private String enable;
 
+	@Column(nullable=false, length=100)
 	private String name;
 
+	@Column(nullable=false, length=250)
 	private String subject;
 
 	public SystemTemplate() {

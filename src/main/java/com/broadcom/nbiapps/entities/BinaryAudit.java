@@ -18,7 +18,7 @@ public class BinaryAudit implements Serializable {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	@Column(name="binary_audit_id")
-	private Long binaryAuditId;
+	private BigInteger binaryAuditId;
 
 	private String action;
 
@@ -49,11 +49,11 @@ public class BinaryAudit implements Serializable {
 	public BinaryAudit() {
 	}
 
-	public Long getBinaryAuditId() {
+	public BigInteger getBinaryAuditId() {
 		return this.binaryAuditId;
 	}
 
-	public void setBinaryAuditId(Long binaryAuditId) {
+	public void setBinaryAuditId(BigInteger binaryAuditId) {
 		this.binaryAuditId = binaryAuditId;
 	}
 

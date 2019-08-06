@@ -1,7 +1,6 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,10 +23,10 @@ public class CycleName implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="cycle_id")
+	@Column(name="cycle_id", unique=true, nullable=false)
 	private Long cycleId;
 
-	@Column(name="cycle_name")
+	@Column(name="cycle_name", nullable=false, length=50)
 	private String cycleName;
 
 	public CycleName() {

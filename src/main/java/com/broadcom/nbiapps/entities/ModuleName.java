@@ -1,8 +1,14 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
-import javax.persistence.*;
-import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 
 /**
@@ -17,13 +23,13 @@ public class ModuleName implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="module_id")
+	@Column(name="module_id", unique=true, nullable=false)
 	private Long moduleId;
 
-	@Column(name="is_deleted")
+	@Column(name="is_deleted", nullable=false, length=1)
 	private String isDeleted;
 
-	@Column(name="module_name")
+	@Column(name="module_name", nullable=false, length=50)
 	private String moduleName;
 
 
@@ -53,49 +59,4 @@ public class ModuleName implements Serializable {
 	public void setModuleName(String moduleName) {
 		this.moduleName = moduleName;
 	}
-
-	/*public List<BinaryAudit> getBinaryAudits() {
-		return this.binaryAudits;
-	}
-
-	public void setBinaryAudits(List<BinaryAudit> binaryAudits) {
-		this.binaryAudits = binaryAudits;
-	}
-
-	public BinaryAudit addBinaryAudit(BinaryAudit binaryAudit) {
-		getBinaryAudits().add(binaryAudit);
-		binaryAudit.setModuleName(this);
-
-		return binaryAudit;
-	}
-
-	public BinaryAudit removeBinaryAudit(BinaryAudit binaryAudit) {
-		getBinaryAudits().remove(binaryAudit);
-		binaryAudit.setModuleName(null);
-
-		return binaryAudit;
-	}
-
-	public List<ModuleAudit> getModuleAudits() {
-		return this.moduleAudits;
-	}
-
-	public void setModuleAudits(List<ModuleAudit> moduleAudits) {
-		this.moduleAudits = moduleAudits;
-	}
-
-	public ModuleAudit addModuleAudit(ModuleAudit moduleAudit) {
-		getModuleAudits().add(moduleAudit);
-		moduleAudit.setModuleName(this);
-
-		return moduleAudit;
-	}
-
-	public ModuleAudit removeModuleAudit(ModuleAudit moduleAudit) {
-		getModuleAudits().remove(moduleAudit);
-		moduleAudit.setModuleName(null);
-
-		return moduleAudit;
-	}*/
-
 }

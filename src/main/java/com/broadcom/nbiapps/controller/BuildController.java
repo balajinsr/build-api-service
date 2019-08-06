@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.broadcom.nbiapps.entities.BuildAudit;
 import com.broadcom.nbiapps.entities.SiloNameReq;
 import com.broadcom.nbiapps.model.ListOfBuildFilesReq;
+import com.broadcom.nbiapps.service.BuildService;
 
 /**
  * @author Balaji N
@@ -31,6 +33,10 @@ import com.broadcom.nbiapps.model.ListOfBuildFilesReq;
 public class BuildController {
 
 	private static final Logger logger = LoggerFactory.getLogger(BuildController.class);
+	
+	
+	@Autowired
+	private BuildService buildService;
 	
 	@PostMapping(path = "/processPullRequest", consumes = "application/json")
 	public ResponseEntity<Object> pullRequestHookListener(HttpServletRequest request, @RequestHeader HttpHeaders httpHeaders) {
@@ -45,7 +51,7 @@ public class BuildController {
 		return ResponseEntity.ok().body(null);
 	}
 	
-	@PostMapping(path = "/preBuildValidtion", consumes = "application/json")
+	@PostMapping(path = "/preBuildValidation", consumes = "application/json")
 	public ResponseEntity<Object> preBuildValidtion(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
 		//TODO:
 		return ResponseEntity.ok().body(null);

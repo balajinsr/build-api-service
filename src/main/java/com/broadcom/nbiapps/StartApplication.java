@@ -20,4 +20,5 @@ public class StartApplication extends SpringBootServletInitializer {
         SpringApplication.run(StartApplication.class, args);
         log.info("Build API Service Up and Running");
     }
+   
 }

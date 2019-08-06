@@ -36,19 +36,22 @@ public class BuildAudit implements Serializable {
 	@Embedded
 	BuildAuditReq buildAuditBaseReq;
 	
-	@Column(name="task_id")
+	@Column(name="task_id", nullable=false, length=50)
 	private String taskId;
 	
-	@Column(name="committer_email")
-	private String committerEmail;
-
-	@Column(name="notify_status")
-	private int notifyStatus;
-
-	@Column(name="parent_task_id")
+	@Column(name="parent_task_id", length=20)
 	private String parentTaskId;
+	
+	@Column(name="create_date_time", nullable=false)
+	private Timestamp createDateTime;
 
-	@Column(name="status_code")
+	@Column(name="last_modified_date_time", nullable=false)
+	private Timestamp lastModifiedDateTime;
+
+	@Column(name="pull_req_number", nullable=false)
+	private BigInteger pullReqNumber;
+	
+	@Column(name="status_code", nullable=false)
 	private BigInteger statusCode;
 	
 	@Lob
@@ -84,23 +87,6 @@ public class BuildAudit implements Serializable {
 		this.taskId = taskId;
 	}
 
-
-	public String getCommitterEmail() {
-		return this.committerEmail;
-	}
-
-	public void setCommitterEmail(String committerEmail) {
-		this.committerEmail = committerEmail;
-	}
-
-	public int getNotifyStatus() {
-		return this.notifyStatus;
-	}
-
-	public void setNotifyStatus(int notifyStatus) {
-		this.notifyStatus = notifyStatus;
-	}
-
 	public String getParentTaskId() {
 		return this.parentTaskId;
 	}
@@ -124,5 +110,4 @@ public class BuildAudit implements Serializable {
 	public void setTimestamp(Timestamp timestamp) {
 		this.timestamp = timestamp;
 	}
-
 }

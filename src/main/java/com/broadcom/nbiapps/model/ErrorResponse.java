@@ -3,17 +3,18 @@
  */
 package com.broadcom.nbiapps.model;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Balaji N
  *
  */
 
-@XmlRootElement(name = "errors")
+
 public class ErrorResponse {
 	private ErrorDetails error;
 
+	public ErrorResponse(ErrorDetails error) {
+		this.error = error;
+	}
 	public ErrorDetails getError() {
 		return error;
 	}
