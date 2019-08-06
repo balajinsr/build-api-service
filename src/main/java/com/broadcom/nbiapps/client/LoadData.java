@@ -14,9 +14,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class LoadData {
 	
-	
+
 	@EventListener(ApplicationReadyEvent.class)
 	public void doSomethingAfterStartup() {
 		System.out.println("hello world, I have just started up");
+		
 	}
 }

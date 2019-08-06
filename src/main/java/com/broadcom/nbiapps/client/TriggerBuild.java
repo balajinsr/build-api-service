@@ -24,10 +24,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -35,20 +35,20 @@ import org.springframework.web.client.RestTemplate;
  * @author Balaji N
  *
  */
-
+@Component
 public class TriggerBuild {
 	private static final Logger logger = LoggerFactory.getLogger(TriggerBuild.class);
 	
-	@Value("${jenkins.url}")
-	private String jenkinsURL;
+	@Value("${spring.jenkins.url}")
+	public String jenkinsURL;
 	
-	@Value("${jenkins.userName}")
-	private String jenkinsAuthenticationUserName;
+	@Value("${spring.jenkins.username}")
+	public String jenkinsAuthenticationUserName;
 	
-	@Value("${jenkins.password}")
-	private String jenkinsAuthenticationPassword;
+	@Value("${spring.jenkins.token}")
+	public String jenkinsAuthenticationPassword;
 
-	public void jenkinsRemoteAPIBuildWithParameters(String jobName, MultiValueMap<String, String> paramsMap) throws  IOException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {	
+	public ResponseEntity<String> jenkinsRemoteAPIBuildWithParameters(String jobName, MultiValueMap<String, String> paramsMap) throws  IOException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {	
 		String jenkinWithParamURL = jenkinsURL.concat("/jenkins/job/").concat(jobName).concat("/buildWithParameters");
 		URL url = new URL(jenkinWithParamURL);
 		
@@ -67,11 +67,7 @@ public class TriggerBuild {
 
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(paramsMap, headers);
 		ResponseEntity<String> response = restTemplate.postForEntity(url.toString(), request , String.class);
-		if(response.getStatusCode().equals(HttpStatus.CREATED)) {
-			logger.info("Jenkins triggerred Successfully");
-		} else {
-			logger.error("Jenkins triggerred failed - statusCode: "+response.getStatusCode()+" , responseBody: "+response.getBody());
-		}
+		return response;
 	}
 	
 	public HttpComponentsClientHttpRequestFactory getClientHttpRequestFactory() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException  {
@@ -90,13 +86,13 @@ public class TriggerBuild {
 		return requestFactory;
 	}
 	
-	public void callJenkin() throws Exception {
+	public ResponseEntity<String> callJenkin() throws Exception {
 		MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
 		map.add("Test", "first.last@example.com");
 		jenkinsURL="https://datso03-l26497.lvn.broadcom.net";
 		jenkinsAuthenticationUserName = "causer";
 		jenkinsAuthenticationPassword = "114b3c900029eb98bc3a80b5628340ec4f";
-		jenkinsRemoteAPIBuildWithParameters("test", map);
+		return jenkinsRemoteAPIBuildWithParameters("test", map);
 	}
 
 	public static void main(String[] args) throws Exception {
