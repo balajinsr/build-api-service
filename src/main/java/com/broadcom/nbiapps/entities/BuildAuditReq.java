@@ -46,6 +46,9 @@ public class BuildAuditReq {
 	public void setPullReqNumber(BigInteger pullReqNumber) {
 		this.pullReqNumber = pullReqNumber;
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		return "BuildAuditReq [siloId=" + siloId + ", buildNumber=" + buildNumber + ", pullReqNumber=" + pullReqNumber + "]";
+	}
 }

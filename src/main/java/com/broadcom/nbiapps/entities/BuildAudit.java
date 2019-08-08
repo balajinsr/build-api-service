@@ -123,4 +123,9 @@ public class BuildAudit implements Serializable {
 		this.buildAuditReq = buildAuditReq;
 	}
 
+	@Override
+	public String toString() {
+		return "BuildAudit [buildReqId=" + buildReqId + ", buildAuditReq=" + buildAuditReq + ", taskId=" + taskId + ", parentTaskId=" + parentTaskId + ", statusCode=" + statusCode
+				+ ", buildAuditAddlData=" + buildAuditAddlData + "]";
+	}
 }

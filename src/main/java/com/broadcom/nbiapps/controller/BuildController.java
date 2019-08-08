@@ -74,13 +74,14 @@ public class BuildController {
 	@PostMapping(path = "/saveBuildAudit")
 	public ResponseEntity<Object> saveBuildAudit(HttpServletRequest request, @RequestBody BuildAuditReq buildAuditReq)  {
 		BuildAudit buildAudit = buildService.saveBuildAudit(buildAuditReq);
-		return ResponseEntity.ok().body(null);
+		logger.info("Build initiated - BuildAuditData Saved to DB: "+buildAudit.toString());
+		return ResponseEntity.ok().build();
 	}
 	
 	@PostMapping(path = "/validatePullRequest")
-	public ResponseEntity<Object> validatePullRequest(HttpServletRequest request, @RequestBody BuildAudit buildAuditReq)  {
-		//TODO:
-		return ResponseEntity.ok().body(null);
+	public ResponseEntity<Object> validatePullRequest(HttpServletRequest request, @RequestBody BuildAuditReq buildAuditReq)  {
+		buildService.validatePullRequest(buildAuditReq);
+		return ResponseEntity.ok().build();
 	}
 	
 	@PostMapping(path = "/preBuildValidation")

@@ -51,4 +51,9 @@ public class BuildAuditAddlData {
 	public void setMergeCommitUrl(String mergeCommitUrl) {
 		this.mergeCommitUrl = mergeCommitUrl;
 	}
+	@Override
+	public String toString() {
+		return "BuildAuditAddlData [committerLoginId=" + committerLoginId + ", committerFullName=" + committerFullName + ", committerEmail=" + committerEmail + ", reason=" + reason
+				+ ", buildDuration=" + buildDuration + ", mergeCommitUrl=" + mergeCommitUrl + "]";
+	}
 }

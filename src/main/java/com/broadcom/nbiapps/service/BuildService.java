@@ -12,6 +12,6 @@ import com.broadcom.nbiapps.entities.BuildAuditReq;
  */
 public interface BuildService {
 	void processPullRequest(String payload);
-	Object validatePullRequest(BuildAuditReq buildAuditReq);
 	BuildAudit saveBuildAudit(BuildAuditReq buildAuditReq);
+	void validatePullRequest(BuildAuditReq buildAuditReq);
 }

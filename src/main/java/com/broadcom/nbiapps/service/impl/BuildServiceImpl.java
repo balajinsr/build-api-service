@@ -80,6 +80,7 @@ public class BuildServiceImpl implements BuildService {
 		buildAudit.setTaskId(taskId);
 		buildAudit.setParentTaskId(taskId);
 		buildAudit.setBuildAuditAddlData(getBuildAuditAdditionalData(buildAuditReq, pullReqData));
+		
 		return buildAuditDAO.save(buildAudit);
 	}
 	
@@ -100,7 +101,7 @@ public class BuildServiceImpl implements BuildService {
 	}
 
 	@Override
-	public Object validatePullRequest(BuildAuditReq buildAuditReq) {
+	public void validatePullRequest(BuildAuditReq buildAuditReq) {
 		PullRequestData pullReqData = pullRequestDataDAO.findByPullReqNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getSiloId());
 		PullRequest pullReq = pullReqData.getPullRequest();
 		String taskIdFromRef = pullReq.getHead().getRef();
@@ -110,8 +111,7 @@ public class BuildServiceImpl implements BuildService {
 		ResponseBuilder responseBuilder = prechecks(taskIdFromRef, taskId, fork, isPrivateRep);
 		if (!responseBuilder.isResult()) {
 			throw new BuildValidationException(responseBuilder.getResultDesc());
-		} 
-		return ResponseEntity.ok().build();
+		}
 	}
 
 	

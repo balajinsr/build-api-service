@@ -43,7 +43,7 @@ public class BuildExceptionHandler extends ResponseEntityExceptionHandler {
 		List<String> details = new ArrayList<>();
 		details.add(ex.getLocalizedMessage());
 		ErrorResponse error = new ErrorResponse("Not Accepted", details);
-		logger.error("Not accepted: " + ex.getMessage(), ex);
+		logger.error("Not Accepted: " + ex.getMessage(), ex);
 		return handleExceptionInternal(ex, error, new HttpHeaders(), HttpStatus.NOT_ACCEPTABLE, request);
 	}
 
