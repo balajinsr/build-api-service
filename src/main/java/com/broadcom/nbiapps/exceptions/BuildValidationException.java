@@ -13,38 +13,43 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  *
  */
 @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-public class BuildValidationException extends BuildException { 
+public class BuildValidationException extends RuntimeException { 
 	private static final long serialVersionUID = 1L;
-	private List<Error> errors;
-
+	private String message;
+	
+	//see BindingResult class 
+	private List<String> details; 
+	
+	public BuildValidationException(Throwable cause) {
+		super(cause);
+	}
+	
 	public BuildValidationException(String message) {
-        super(message);
-    }
-	
-    public BuildValidationException(String message, Throwable cause, List<Error> errors) {
-        super(message, cause);
-        this.errors = errors;
-    }
-    public BuildValidationException(String message, List<Error> errors) {
-        super(message);
-        this.errors = errors;
-    }
-    
-    public BuildValidationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-    
-    public BuildValidationException(Throwable cause, List<Error> errors) {
-        super(cause);
-        this.errors = errors;
-    }
-    
-	public List<Error> getErrors() {
-		return errors;
+		super(message);
 	}
-	public void setErrors(List<Error> errors) {
-		this.errors = errors;
+	
+	public BuildValidationException(String message, Throwable cause) {
+		super(message, cause);
+	}
+	
+	public BuildValidationException(List<String> details, Throwable cause) {
+		super(cause);
+		this.details=details;
+	}
+	 
+	public String getMessage() {
+		return message;
 	}
 
-	
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public List<String> getDetails() {
+		return details;
+	}
+
+	public void setDetails(List<String> details) {
+		this.details = details;
+	}
 }

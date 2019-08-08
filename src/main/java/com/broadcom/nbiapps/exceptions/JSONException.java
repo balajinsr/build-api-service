@@ -3,7 +3,6 @@
  */
 package com.broadcom.nbiapps.exceptions;
 
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -11,13 +10,16 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author Balaji N
  *
  */
-@ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE)
-public class PullRequestRejectException extends RuntimeException { 
-	
+@ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
+public class JSONException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	private String message;
 	
-	public PullRequestRejectException(String message, Throwable cause) {
+	public JSONException(Throwable cause) {
+		super(cause);
+	}
+	
+	public JSONException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

@@ -48,25 +48,32 @@ public class TriggerBuild {
 	@Value("${spring.jenkins.token}")
 	public String jenkinsAuthenticationPassword;
 
-	public ResponseEntity<String> jenkinsRemoteAPIBuildWithParameters(String jobName, MultiValueMap<String, String> paramsMap) throws  IOException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {	
-		String jenkinWithParamURL = jenkinsURL.concat("/jenkins/job/").concat(jobName).concat("/buildWithParameters");
-		URL url = new URL(jenkinWithParamURL);
-		
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-		headers.setBasicAuth(jenkinsAuthenticationUserName, jenkinsAuthenticationPassword);
-		RestTemplate restTemplate = null;
-		logger.info("Jenkins URL: "+url.toString());
-		logger.info("PayLoad: "+paramsMap.toString());
-		
-		if("https".equals(url.getProtocol())) {
-			restTemplate = new RestTemplate(getClientHttpRequestFactory());
-		} else {
-			restTemplate = new RestTemplate();
+	public ResponseEntity<String> jenkinsRemoteAPIBuildWithParameters(String jobName, MultiValueMap<String, String> paramsMap) {	
+		ResponseEntity<String> response = null;
+		try {
+			String jenkinWithParamURL = jenkinsURL.concat("/jenkins/job/").concat(jobName).concat("/buildWithParameters");
+			URL url = new URL(jenkinWithParamURL);
+			
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			headers.setBasicAuth(jenkinsAuthenticationUserName, jenkinsAuthenticationPassword);
+			RestTemplate restTemplate = null;
+			logger.info("Jenkins URL: "+url.toString());
+			logger.info("PayLoad: "+paramsMap.toString());
+			
+			if("https".equals(url.getProtocol())) {
+				restTemplate = new RestTemplate(getClientHttpRequestFactory());
+			} else {
+				restTemplate = new RestTemplate();
+			}
+	
+			HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(paramsMap, headers);
+			response = restTemplate.postForEntity(url.toString(), request , String.class);
+			logger.info("Response status : "+response.getStatusCode());
+		} catch(IOException | KeyManagementException | NoSuchAlgorithmException | KeyStoreException ex) {
+			logger.error("Error: "+ex, ex);
+			throw new RuntimeException("Error while calling RemoteAPIBuildWithParameters", ex);
 		}
-
-		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(paramsMap, headers);
-		ResponseEntity<String> response = restTemplate.postForEntity(url.toString(), request , String.class);
 		return response;
 	}
 	
@@ -88,11 +95,11 @@ public class TriggerBuild {
 	
 	public ResponseEntity<String> callJenkin() throws Exception {
 		MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
-		map.add("Test", "first.last@example.com");
-		jenkinsURL="https://datso03-l26497.lvn.broadcom.net";
-		jenkinsAuthenticationUserName = "causer";
-		jenkinsAuthenticationPassword = "114b3c900029eb98bc3a80b5628340ec4f";
-		return jenkinsRemoteAPIBuildWithParameters("test", map);
+		map.add("SILO_NAME", "first.last@example.com");
+		jenkinsURL="https://lod-paysec01.lvn.broadcom.net";
+		jenkinsAuthenticationUserName = "nbi-app-build";
+		jenkinsAuthenticationPassword = "71b366a61be94c74f381a6179c306811";//114b3c900029eb98bc3a80b5628340ec4f";
+		return jenkinsRemoteAPIBuildWithParameters("Test", map);
 	}
 
 	public static void main(String[] args) throws Exception {

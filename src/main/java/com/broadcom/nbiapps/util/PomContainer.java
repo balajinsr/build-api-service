@@ -50,7 +50,6 @@ public class PomContainer {
 			// if dependencyManagement is present
 			dependencyList = pomModel.getDependencyManagement().getDependencies();
 			// placeholder version will be replaced.
-			replaceProperties();
 			if(build != null) {
 				pluginList = build.getPluginManagement().getPlugins();
 			}
@@ -113,19 +112,6 @@ public class PomContainer {
 			}
 		}
 		return pomModel;
-	}
-	
-	private void replaceProperties() {
-		Properties prop = pomModel.getProperties();
-		for(Dependency dep : dependencyList) {
-			String key = null;//StringUtils.substringBetween(dep.getVersion(), "${", "}");
-			if(key != null) {
-				String value = (String)prop.get(key);
-				if(value != null) {
-					dep.setVersion(value);
-				}
-			}
-		}
 	}
 	
 	public String getVersion() {

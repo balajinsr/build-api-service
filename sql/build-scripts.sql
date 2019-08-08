@@ -59,7 +59,7 @@ CREATE TABLE `build_audit` (
   `task_id` varchar(50) NOT NULL COMMENT 'dtnumber or case number',
   `status_code` bigint(40) NOT NULL,
   `parent_task_id` varchar(20) DEFAULT NULL,
-  `build_additional_details` text NULL, 
+  `build_additional_data` text NULL, 
    PRIMARY KEY (`build_req_id`),
    UNIQUE KEY `buildaudit` (`silo_id`,`build_number`,`task_id`)
   ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

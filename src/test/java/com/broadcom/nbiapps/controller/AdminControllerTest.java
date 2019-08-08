@@ -1,7 +1,9 @@
 /**
  * 
  */
-package com.broadcom.nbiapps;
+package com.broadcom.nbiapps.controller;
+
+import java.math.BigInteger;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +29,7 @@ public class AdminControllerTest {
 		SiloNameReq siloNameReq = new SiloNameReq();
 		siloNameReq.setSiloName("Bdkdidid");
 		siloName.setSiloNameReq(siloNameReq);
-		siloName.setSiloId(3L);
+		siloName.setSiloId(BigInteger.valueOf(3));
 		siloNameDAO.save(siloName);
 	}
 }

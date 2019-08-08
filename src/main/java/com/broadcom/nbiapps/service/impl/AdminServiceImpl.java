@@ -3,6 +3,8 @@
  */
 package com.broadcom.nbiapps.service.impl;
 
+import java.math.BigInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +57,7 @@ public class AdminServiceImpl implements AdminService {
 		}*/
 		
 		SiloName siloName = new SiloName();
-		siloName.setSiloId(3L);
+		siloName.setSiloId(BigInteger.valueOf(3));
 		siloName.setSiloNameReq(siloNameReq);
 		//siloNameDAO.save(siloName);
 		customDAO.merge(siloName);

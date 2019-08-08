@@ -20,6 +20,8 @@ public class BuildAuditReq {
 	@Column(name="build_number" , nullable=false)
 	private BigInteger buildNumber;
 	
+	@Column(name="pull_req_number", nullable=false)
+	private BigInteger pullReqNumber;
 	
 	public BigInteger getSiloId() {
 		return siloId;
@@ -35,6 +37,14 @@ public class BuildAuditReq {
 
 	public void setBuildNumber(BigInteger buildNumber) {
 		this.buildNumber = buildNumber;
+	}
+
+	public BigInteger getPullReqNumber() {
+		return pullReqNumber;
+	}
+
+	public void setPullReqNumber(BigInteger pullReqNumber) {
+		this.pullReqNumber = pullReqNumber;
 	}
 	
 	

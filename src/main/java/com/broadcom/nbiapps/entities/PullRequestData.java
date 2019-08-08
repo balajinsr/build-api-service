@@ -1,9 +1,19 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
-import javax.persistence.*;
-import java.sql.Timestamp;
 import java.math.BigInteger;
+import java.sql.Timestamp;
+
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlElement;
+
+import com.broadcom.nbiapps.model.PullRequest;
 
 
 /**
@@ -17,8 +27,8 @@ public class PullRequestData implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
 	@Column(name="pull_req_number", unique=true, nullable=false)
+	@XmlElement(name="number")
 	private BigInteger pullReqNumber;
 
 	@Column(nullable=false, length=30)
@@ -28,15 +38,16 @@ public class PullRequestData implements Serializable {
 	private Timestamp createDateTime;
 
 	@Lob
-	@Column(nullable=false)
-	private String payload;
-
+	@Column(name="payload", nullable=false)
+	@Convert(converter = PullRequestConverter.class)
+	private PullRequest pullRequest;
+	
 	@Column(name="silo_id", nullable=false)
 	private BigInteger siloId;
 
 	public PullRequestData() {
 	}
-
+	
 	public BigInteger getPullReqNumber() {
 		return this.pullReqNumber;
 	}
@@ -61,13 +72,14 @@ public class PullRequestData implements Serializable {
 		this.createDateTime = createDateTime;
 	}
 
-	public String getPayload() {
-		return this.payload;
+	public PullRequest getPullRequest() {
+		return pullRequest;
 	}
 
-	public void setPayload(String payload) {
-		this.payload = payload;
+	public void setPullRequest(PullRequest pullRequest) {
+		this.pullRequest = pullRequest;
 	}
+
 
 	public BigInteger getSiloId() {
 		return this.siloId;
@@ -77,4 +89,9 @@ public class PullRequestData implements Serializable {
 		this.siloId = siloId;
 	}
 
+	@Override
+	public String toString() {
+		return "PullRequestData [pullReqNumber=" + pullReqNumber + ", action=" + action + ", createDateTime=" + createDateTime + ", pullRequest=" + pullRequest + ", siloId="
+				+ siloId + "]";
+	}
 }

@@ -1,6 +1,7 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -19,15 +20,14 @@ import javax.persistence.Table;
 @Entity
 @Table(name="silo_names")
 @NamedQuery(name="SiloName.findAll", query="SELECT s FROM SiloName s")
-@NamedQuery(name="SiloName.findByName", query="SELECT s FROM SiloName s where s.siloNameReq.siloName=:name")
-
+@NamedQuery(name="SiloName.findBySiloName", query="SELECT s FROM SiloName s where s.siloNameReq.siloName=:siloName")
 public class SiloName implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	@Column(name="silo_id", nullable=false)
-	private Long siloId;
+	private BigInteger siloId;
 
 	@Embedded
 	SiloNameReq siloNameReq;
@@ -35,11 +35,11 @@ public class SiloName implements Serializable {
 	public SiloName() {
 	}
 
-	public Long getSiloId() {
+	public BigInteger getSiloId() {
 		return this.siloId;
 	}
 
-	public void setSiloId(Long siloId) {
+	public void setSiloId(BigInteger siloId) {
 		this.siloId = siloId;
 	}
 
@@ -50,14 +50,4 @@ public class SiloName implements Serializable {
 	public void setSiloNameReq(SiloNameReq siloNameReq) {
 		this.siloNameReq = siloNameReq;
 	}
-
-	/*public String getSiloName() {
-		return this.siloName;
-	}
-
-	public void setSiloName(String siloName) {
-		this.siloName = siloName;
-	}*/
-	
-	
 }

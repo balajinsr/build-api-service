@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,7 +15,7 @@ import javax.persistence.Lob;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
+import com.broadcom.nbiapps.model.BuildAuditAddlData;
 
 
 /**
@@ -24,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 @Entity
 @Table(name="build_audit")
 @NamedQuery(name="BuildAudit.findAll", query="SELECT b FROM BuildAudit b")
-@JsonRootName(value = "lot")
 public class BuildAudit implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -34,8 +34,8 @@ public class BuildAudit implements Serializable {
 	private Long buildReqId;
 	
 	@Embedded
-	BuildAuditReq buildAuditBaseReq;
-	
+	BuildAuditReq buildAuditReq;
+
 	@Column(name="task_id", nullable=false, length=50)
 	private String taskId;
 	
@@ -47,18 +47,14 @@ public class BuildAudit implements Serializable {
 
 	@Column(name="last_modified_date_time", nullable=false)
 	private Timestamp lastModifiedDateTime;
-
-	@Column(name="pull_req_number", nullable=false)
-	private BigInteger pullReqNumber;
 	
 	@Column(name="status_code", nullable=false)
 	private BigInteger statusCode;
 	
 	@Lob
-	@Column(name="build_additional_details")
-	private String buildAdditionalDetails;
-
-	private Timestamp timestamp;
+	@Column(name="build_additional_data")
+	@Convert(converter = BuildAuditAddlDataConverter.class)
+	private BuildAuditAddlData buildAuditAddlData;
 
 	public BuildAudit() {
 	}
@@ -70,15 +66,31 @@ public class BuildAudit implements Serializable {
 	public void setBuildReqId(Long buildReqId) {
 		this.buildReqId = buildReqId;
 	}
-
-	public String getBuildAdditionalDetails() {
-		return this.buildAdditionalDetails;
-	}
-
-	public void setBuildAdditionalDetails(String buildAdditionalDetails) {
-		this.buildAdditionalDetails = buildAdditionalDetails;
-	}
 	
+	public Timestamp getCreateDateTime() {
+		return createDateTime;
+	}
+
+	public void setCreateDateTime(Timestamp createDateTime) {
+		this.createDateTime = createDateTime;
+	}
+
+	public Timestamp getLastModifiedDateTime() {
+		return lastModifiedDateTime;
+	}
+
+	public void setLastModifiedDateTime(Timestamp lastModifiedDateTime) {
+		this.lastModifiedDateTime = lastModifiedDateTime;
+	}
+
+	public BuildAuditAddlData getBuildAuditAddlData() {
+		return buildAuditAddlData;
+	}
+
+	public void setBuildAuditAddlData(BuildAuditAddlData buildAuditAddlData) {
+		this.buildAuditAddlData = buildAuditAddlData;
+	}
+
 	public String getTaskId() {
 		return taskId;
 	}
@@ -103,11 +115,12 @@ public class BuildAudit implements Serializable {
 		this.statusCode = statusCode;
 	}
 
-	public Timestamp getTimestamp() {
-		return this.timestamp;
+	public BuildAuditReq getBuildAuditReq() {
+		return buildAuditReq;
 	}
 
-	public void setTimestamp(Timestamp timestamp) {
-		this.timestamp = timestamp;
+	public void setBuildAuditReq(BuildAuditReq buildAuditReq) {
+		this.buildAuditReq = buildAuditReq;
 	}
+
 }
