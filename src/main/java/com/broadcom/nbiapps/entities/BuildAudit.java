@@ -25,6 +25,9 @@ import com.broadcom.nbiapps.model.BuildAuditAddlData;
 @Entity
 @Table(name="build_audit")
 @NamedQuery(name="BuildAudit.findAll", query="SELECT b FROM BuildAudit b")
+@NamedQuery(name="BuildAudit.findByPullReqNumberAndBuildNumberAndSiloId", query="SELECT b FROM BuildAudit b WHERE b.buildAuditReq.pullReqNumber=:pullReqNumber"
+		+ " and b.buildAuditReq.buildNumber=:buildNumber and b.buildAuditReq.siloId=:siloId")
+
 public class BuildAudit implements Serializable {
 	private static final long serialVersionUID = 1L;
 

@@ -20,16 +20,16 @@ import com.broadcom.nbiapps.model.SCRCreateReq;
  *
  */
 @RestController
-@RequestMapping(path = "/release", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/release", consumes=MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 public class ReleaseController {
 
-	@PostMapping(path = "/processReleaseArtifacts", consumes = "application/json")
+	@PostMapping(path = "/releasePackageArtifacts")
 	public ResponseEntity<Object> processReleaseArtifacts(HttpServletRequest request, @RequestBody ReleaseReq releaseReq)  {
 		//TODO:
 		return ResponseEntity.ok().body(null);
 	}
 	
-	@PostMapping(path = "/createSCR", consumes = "application/json")
+	@PostMapping(path = "/createSCR")
 	public  ResponseEntity<Object> createSCR(HttpServletRequest request, @RequestBody SCRCreateReq scrCreateReq)  {
 		//TODO:
 		return ResponseEntity.ok().body(null);

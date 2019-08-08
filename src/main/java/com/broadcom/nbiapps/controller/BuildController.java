@@ -74,7 +74,14 @@ public class BuildController {
 	@PostMapping(path = "/saveBuildAudit")
 	public ResponseEntity<Object> saveBuildAudit(HttpServletRequest request, @RequestBody BuildAuditReq buildAuditReq)  {
 		BuildAudit buildAudit = buildService.saveBuildAudit(buildAuditReq);
-		logger.info("Build initiated - BuildAuditData Saved to DB: "+buildAudit.toString());
+		logger.info("BuildAuditData Saved to DB: "+buildAudit.toString());
+		return ResponseEntity.ok().build();
+	}
+	
+	@PostMapping(path = "/updateBuildAudit")
+	public ResponseEntity<Object> updateBuildAudit(HttpServletRequest request, @RequestBody BuildAudit buildAudit)  {
+		buildService.updateBuildAudit(buildAudit);
+		logger.info("BuildAuditData Updated to DB: "+buildAudit.toString());
 		return ResponseEntity.ok().build();
 	}
 	
@@ -86,18 +93,18 @@ public class BuildController {
 	
 	@PostMapping(path = "/preBuildValidation")
 	public ResponseEntity<Object> preBuildValidtion(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
+		buildService.preBuildValidtion(listOfFilesReq);
+		return ResponseEntity.ok().build();
+	}
+	
+	
+	@PostMapping(path = "/generateBuildCommand")
+	public Object generateBuildCommand(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
 		//TODO:
 		return ResponseEntity.ok().body(null);
 	}
 	
-	
-	@PostMapping(path = "/getCommandForBuild")
-	public Object getCommandForBuild(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
-		//TODO:
-		return ResponseEntity.ok().body(null);
-	}
-	
-	@PostMapping(path = "/processBuildArtifacts")
+	@PostMapping(path = "/releaseBuildArtifacts")
 	public Object processBuildArtifacts(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
 		//TODO:
 		return ResponseEntity.ok().body(null);

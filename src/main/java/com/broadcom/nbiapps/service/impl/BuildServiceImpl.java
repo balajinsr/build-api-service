@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -24,6 +23,7 @@ import com.broadcom.nbiapps.entities.BuildAuditReq;
 import com.broadcom.nbiapps.entities.PullRequestData;
 import com.broadcom.nbiapps.exceptions.BuildValidationException;
 import com.broadcom.nbiapps.model.BuildAuditAddlData;
+import com.broadcom.nbiapps.model.ListOfBuildFilesReq;
 import com.broadcom.nbiapps.model.PullRequest;
 import com.broadcom.nbiapps.model.PullRequestEvent;
 import com.broadcom.nbiapps.model.ResponseBuilder;
@@ -85,6 +85,48 @@ public class BuildServiceImpl implements BuildService {
 	}
 	
 	
+	@Override
+	public void updateBuildAudit(BuildAudit buildAuditInput) {
+		BuildAuditReq buildAuditReq = buildAuditInput.getBuildAuditReq();
+		BuildAudit buildAuditSave = buildAuditDAO.findByPullReqNumberAndBuildNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getBuildNumber(), buildAuditReq.getSiloId());
+		buildAuditSave.setStatusCode(buildAuditInput.getStatusCode());
+		BuildAuditAddlData BuildAuditAddlDataInput = buildAuditInput.getBuildAuditAddlData();
+		if(BuildAuditAddlDataInput.getReason() != null) {
+			buildAuditSave.getBuildAuditAddlData().setReason(BuildAuditAddlDataInput.getReason());
+		}
+	}
+	
+	@Override
+	public void validatePullRequest(BuildAuditReq buildAuditReq) {
+		PullRequestData pullReqData = pullRequestDataDAO.findByPullReqNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getSiloId());
+		PullRequest pullReq = pullReqData.getPullRequest();
+		String taskIdFromRef = pullReq.getHead().getRef();
+		String taskId = pullReq.getTitle().trim();
+		boolean fork = pullReq.getHead().getRepo().isFork();
+		boolean isPrivateRep = pullReq.getHead().getRepo().isPrivateRep();
+		ResponseBuilder responseBuilder = prechecks(taskIdFromRef, taskId, fork, isPrivateRep);
+		if (!responseBuilder.isResult()) {
+			throw new BuildValidationException(responseBuilder.getResultDesc());
+		}
+		
+		//TODO: sales force task validation. 
+	}
+	
+	/**
+	 * Pre-validation Checks on opening a pull request The following checks
+	 * needs to be put in place:-
+	 * 
+	 * ADD 1. Are the extensions of the files correct 2. Duplicate Files are not
+	 * present a) java files should not have the same package.
+	 *  
+	 * MODIFY 1. Duplicate Files are not present a) java files should not have
+	 * the same package.
+	 */
+	@Override
+	public void preBuildValidtion(ListOfBuildFilesReq listOfFilesReq) {
+		
+	}
+
 	private BuildAuditAddlData getBuildAuditAdditionalData(BuildAuditReq buildAuditReq, PullRequestData pullReqData) {
 		BuildAuditAddlData buildAuditAddlData = new BuildAuditAddlData();
 		PullRequest pullReq = pullReqData.getPullRequest();
@@ -98,20 +140,6 @@ public class BuildServiceImpl implements BuildService {
 		buildAuditAddlData.setCommitterEmail("");
 		buildAuditAddlData.setCommitterFullName(""); //TODO:
 		return buildAuditAddlData;
-	}
-
-	@Override
-	public void validatePullRequest(BuildAuditReq buildAuditReq) {
-		PullRequestData pullReqData = pullRequestDataDAO.findByPullReqNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getSiloId());
-		PullRequest pullReq = pullReqData.getPullRequest();
-		String taskIdFromRef = pullReq.getHead().getRef();
-		String taskId = pullReq.getTitle().trim();
-		boolean fork = pullReq.getHead().getRepo().isFork();
-		boolean isPrivateRep = pullReq.getHead().getRepo().isPrivateRep();
-		ResponseBuilder responseBuilder = prechecks(taskIdFromRef, taskId, fork, isPrivateRep);
-		if (!responseBuilder.isResult()) {
-			throw new BuildValidationException(responseBuilder.getResultDesc());
-		}
 	}
 
 	
