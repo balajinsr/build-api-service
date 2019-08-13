@@ -31,9 +31,7 @@ public class BuildExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(BuildValidationException.class)
 	public ResponseEntity<?> buildValidationException(BuildValidationException ex, WebRequest request) {
-		List<String> details = new ArrayList<>();
-		details.addAll(ex.getDetails());
-		ErrorResponse error = new ErrorResponse("Validation Error", details);
+		ErrorResponse error = new ErrorResponse("Validation Error", ex.getDetails());
 		logger.error("Validation Error: " + ex.getMessage(), ex);
 		return handleExceptionInternal(ex, error, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
 	}

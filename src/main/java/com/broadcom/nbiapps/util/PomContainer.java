@@ -3,15 +3,18 @@ package com.broadcom.nbiapps.util;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
@@ -21,12 +24,16 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.broadcom.nbiapps.model.ResponseBuilder;
 
 
 /**
  * 
  * @author sandipbose
+ * @author Balaji
  * 
  * Container to hold information about a given POM.
  * Also has helper methods which can be invoked to check the correctness of the pom inline with our build system
@@ -34,6 +41,7 @@ import com.broadcom.nbiapps.model.ResponseBuilder;
  */
 
 public class PomContainer {
+	private static final Logger logger = LoggerFactory.getLogger(PomContainer.class);
 	private Model pomModel = null;
 	private List<Dependency> dependencyList;
 	private List<Plugin> pluginList;
@@ -45,6 +53,16 @@ public class PomContainer {
 		File pomFileObj = new File(absolutePomFileLocation);
 		pomModel = createModelFromPomFile(pomFileObj);
 		predecessorModels = getPredecessorModels(pomModel, pomFileObj);
+		initPlugins();
+	}
+	
+	public PomContainer(byte [] srcPomContent) throws FileNotFoundException, IOException, XmlPullParserException{
+		pomModel = createModelFromPomFile(srcPomContent);
+		initPlugins();
+	}
+
+
+	private void initPlugins() {
 		Build build = pomModel.getBuild();
 		if (pomModel.getDependencyManagement() != null){
 			// if dependencyManagement is present
@@ -60,6 +78,10 @@ public class PomContainer {
 				pluginList = build.getPlugins();
 			}
 		}
+	}
+	
+	public Model getPOMModel(byte [] srcPomContent) throws IOException, XmlPullParserException {
+		return createModelFromPomFile(srcPomContent);
 	}
 	
 	/**
@@ -90,6 +112,21 @@ public class PomContainer {
 	
 	public int getModuleDepth() {
 		return predecessorModels.size();
+	}
+	
+	private Model createModelFromPomFile(byte [] absolutePomFileLocation) throws IOException, XmlPullParserException{
+		Model pomModel = null;
+		MavenXpp3Reader pomReader = new MavenXpp3Reader();
+		InputStream is = null;
+		try {
+			is = new ByteArrayInputStream(absolutePomFileLocation);
+			pomModel = pomReader.read(is);
+		} finally {
+			if(is != null) {
+				is.close();
+			}
+		}
+		return pomModel;
 	}
 	
 	/**
@@ -444,6 +481,136 @@ public class PomContainer {
 			}
 		}
 		return sendResult(true);
+	}
+	
+	public List<Dependency> getAddedDependencies(PomContainer other) {
+		List<Dependency> addedDependencies = null;
+		if(this.isParentPom().isResult()) {
+			addedDependencies = other.getDependencies().stream().filter(o1 -> this.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+					&& o2.getArtifactId().equals(o1.getArtifactId())
+					&& o2.getVersion().equals(o1.getVersion())
+					&& (o2.getScope() == o1.getScope() || o2.getScope().equals(o1.getScope())))).collect(Collectors.toList());
+		} else {
+			addedDependencies = other.getDependencies().stream().filter(o1 -> this.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+					&& o2.getArtifactId().equals(o1.getArtifactId())
+					&& (o2.getVersion() == o1.getVersion() || o2.getVersion().equals(o1.getVersion())))).collect(Collectors.toList());
+		}
+		return addedDependencies;
+	}
+	
+	
+	public List<Dependency> getRemovedDependencies(PomContainer other) {
+		List<Dependency> removedDependencies = null;
+		if(this.isParentPom().isResult()) {
+			removedDependencies = this.getDependencies().stream().filter(o1 -> other.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+					&& o2.getArtifactId().equals(o1.getArtifactId())
+					&& o2.getVersion().equals(o1.getVersion())
+					&& (o2.getScope() == o1.getScope() || o2.getScope().equals(o1.getScope())))).collect(Collectors.toList());
+		} else {
+			removedDependencies = this.getDependencies().stream().filter(o1 -> other.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+					&& o2.getArtifactId().equals(o1.getArtifactId())
+					&& (o2.getVersion() == o1.getVersion() || o2.getVersion().equals(o1.getVersion())))).collect(Collectors.toList());
+		}
+		return removedDependencies;
+	}
+	
+	public void printDependenciesChanges(List<Dependency> removedOriginalDependencies,  List<Dependency> addedModifiedDependencies) {
+		List<Dependency> modifiedDependencies = null;
+		if(this.isParentPom().isResult()) {
+			modifiedDependencies = removedOriginalDependencies.stream().filter(o1 -> addedModifiedDependencies.stream().allMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+					&& o2.getArtifactId().equals(o1.getArtifactId()))).collect(Collectors.toList());
+		} 
+		getNewlyAddedDependencies(addedModifiedDependencies, modifiedDependencies);
+	}
+	
+	private void getNewlyAddedDependencies(List<Dependency> addedModifiedDependencies,  List<Dependency> modifiedDependencies) {
+		List<Dependency> addedModDependencies = new ArrayList<>(addedModifiedDependencies);
+		if(!addedModDependencies.isEmpty() && !modifiedDependencies.isEmpty()) {
+			boolean condition = addedModDependencies.size() > modifiedDependencies.size();
+			boolean isDone = condition ? addedModDependencies.removeAll(modifiedDependencies) : modifiedDependencies.removeAll(addedModDependencies);
+			if(isDone) {
+				if(condition) {
+					logger.info("Newly added dependencies: "+addedModDependencies.toString());
+				} else {
+					logger.info("Newly added dependencies: "+modifiedDependencies.toString());
+				}
+			} else {
+				logger.info("Unable to remove from dependencies list. Verify it.");
+			}
+		}
+	}
+	
+	public List<String> getAddedModules(PomContainer other) {
+		if(this.isParentPom().isResult()) {
+			return other.getChildModules().stream().filter(o1 -> this.getChildModules().stream().noneMatch(o2 -> o2.equals(o1))).collect(Collectors.toList());
+		} 
+		return null;
+	}
+	
+	public List<String> getRemovedModules(PomContainer other) {
+		if(this.isParentPom().isResult()) {
+			return this.getChildModules().stream().filter(o1 -> other.getChildModules().stream().noneMatch(o2 -> o2.equals(o1))).collect(Collectors.toList());
+		} 
+		return null;
+	}
+	
+	public static void main(String ...args) throws Exception {
+		PomContainer srcPomContainer = new PomContainer("C:/work-ca/GITHUB-Enterprise-Developer/NBI-Applications-SECURE5/pom.xml"); 
+		PomContainer deskPomContainer = new PomContainer("C:/work-ca/GITHUB-Enterprise-Developer/NBI-Applications-SECURE5/pom-dest.xml"); 
+		
+		
+		List<String> srcModuleList = srcPomContainer.getChildModules();
+		List<String> destModuleList = deskPomContainer.getChildModules();
+		
+		List<String> removedModule = srcModuleList.stream().filter(o1 -> destModuleList.stream().noneMatch(o2 -> o2.equals(o1))
+				).collect(Collectors.toList());
+		
+		List<String> addedModule = destModuleList.stream().filter(o1 -> srcModuleList.stream().noneMatch(o2 -> o2.equals(o1))
+				).collect(Collectors.toList());
+		System.out.println("removedModules: "+removedModule);
+		System.out.println("addedModules: "+addedModule);
+		
+		List<Dependency> srcDepList = srcPomContainer.getDependencies();
+		List<Dependency> destDepList = deskPomContainer.getDependencies();
+		
+		
+		List<Dependency> removed = srcDepList.stream().filter(o1 -> destDepList.stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+				&& o2.getArtifactId().equals(o1.getArtifactId())
+				&& o2.getVersion().equals(o1.getVersion())
+				&& (o2.getScope() == o1.getScope() || o2.getScope().equals(o1.getScope())))).collect(Collectors.toList());
+		
+		System.out.println("removed:::"+removed.toString());
+		for(Dependency de  : removed) {
+			System.out.println(de.getArtifactId()+":"+de.getScope());
+		}
+		
+		
+		List<Dependency> added = destDepList.stream().filter(o1 -> srcDepList.stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+				&& o2.getArtifactId().equals(o1.getArtifactId())
+				&& o2.getVersion().equals(o1.getVersion())
+				&& (o2.getScope() == o1.getScope() || o2.getScope().equals(o1.getScope())))).collect(Collectors.toList());
+		
+		System.out.println("added:::"+added.toString());
+		
+		for(Dependency de  : added) {
+			System.out.println(de.getArtifactId()+":"+de.getScope());
+		}	
+		
+		
+		PomContainer srcInheritPomContainer = new PomContainer("C:/work-ca/GITHUB-Enterprise-Developer/NBI-Applications-SECURE5/OTPSampleImplementation/pom.xml");
+		PomContainer destInheritPomContainer = new PomContainer("C:/work-ca/GITHUB-Enterprise-Developer/NBI-Applications-SECURE5/OTPSampleImplementation/dest-inherit.xml"); 
+		
+		List<Dependency> addedInheritDependencies = destInheritPomContainer.getDependencies().stream().filter(o1 -> srcInheritPomContainer.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+				&& o2.getArtifactId().equals(o1.getArtifactId())
+				&& (o2.getVersion() == o1.getVersion() || o2.getVersion().equals(o1.getVersion())))).collect(Collectors.toList());
+		System.out.println("Inherit pom - Added dependencies to dest-pom.xml - "+addedInheritDependencies.toString());
+		
+		
+		List<Dependency> removedInheritDependencies = srcInheritPomContainer.getDependencies().stream().filter(o1 -> destInheritPomContainer.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
+				&& o2.getArtifactId().equals(o1.getArtifactId())
+				&& (o2.getVersion() == o1.getVersion() || o2.getVersion().equals(o1.getVersion())))).collect(Collectors.toList());
+		System.out.println("Inherit pom - Removed dependencies from dest-pom.xml - "+removedInheritDependencies.toString());
+		
 	}
 	
 //	public static void main(String[] str){

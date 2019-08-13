@@ -13,7 +13,12 @@ import org.springframework.util.StringUtils;
 import com.broadcom.nbiapps.model.ResponseBuilder;
 
 public class FileProbeUtil {
-	public FileProbeUtil() {}
+	
+	private String basePath;
+	
+	public FileProbeUtil(String basePath) {
+		this.basePath=basePath;
+	}
 	
 	/**
 	 * Checks whether the extensions are in list. 
@@ -21,12 +26,13 @@ public class FileProbeUtil {
 	 * @return
 	 * @throws IOException
 	 */
-	public ResponseBuilder areFileExtensionsCorrect(String extensionsAllowed, List<String> pullContentFiles) throws IOException{
-		if (pullContentFiles == null || pullContentFiles.isEmpty()){
+	public ResponseBuilder areFileExtensionsCorrect(String extensionsAllowed, List<String> relativeFilePaths) throws IOException{
+		if (relativeFilePaths == null || relativeFilePaths.isEmpty()){
 			return sendResult(true,"No files present");
 		} else{
-			for (String absFilePath : pullContentFiles){
+			for (String relativeFilePath : relativeFilePaths){
 				// skip if its a directory
+				String absFilePath = basePath+File.separator+relativeFilePath;
 				if (!(new File(absFilePath)).isDirectory()) {
 					if(StringUtils.containsWhitespace(absFilePath) ) {
 						return sendResult(false,"File Name should not contains space. [ "+absFilePath+" ]. NOTE: Not in use files should be removed.");
@@ -49,7 +55,8 @@ public class FileProbeUtil {
 	 * @throws IOException
 	 * @throws XmlPullParserException
 	 */
-	public ResponseBuilder isPomCorrect(String basePath, String absfileName) throws FileNotFoundException, IOException {
+	public ResponseBuilder isPomCorrect(String relativeFilePath) throws FileNotFoundException, IOException {
+		String absfileName = basePath+File.separator+relativeFilePath;
 		try {
 			PomContainer pomContainer = new PomContainer(absfileName);
 			ResponseBuilder responseBuilder = pomContainer.checkFinalName();
@@ -150,21 +157,4 @@ public class FileProbeUtil {
 	private ResponseBuilder sendResult(boolean result, String resultDesc){
 		return new ResponseBuilder(result, resultDesc);
 	}
-	
-//	public static void main(String[] str){
-//		FileProbeUtil fileP = new FileProbeUtil();
-//		FileFinder finder = new FileFinder("/Users/sandipbose/Downloads/CodeN/toBeDeleted/NBI-Applications-PSLIB","*.*");
-//		try {
-//			System.out.println(fileP.areFileExtensionsCorrect(finder.getResults(true)));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		try {
-//			System.out.println(fileP.isFileUnique("OTPByCustomer.java", 
-//					"/Users/sandipbose/Downloads/CodeN/toBeDeleted/NBI-Applications-PSLIB",
-//					"/Users/sandipbose/Downloads/CodeN/toBeDeleted/NBI-Applications-SECUREDEMO"));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
 }

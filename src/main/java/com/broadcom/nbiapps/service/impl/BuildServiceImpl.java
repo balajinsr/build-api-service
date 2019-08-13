@@ -3,18 +3,25 @@
  */
 package com.broadcom.nbiapps.service.impl;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.broadcom.nbiapps.client.TriggerBuild;
 import com.broadcom.nbiapps.constants.BuildConstants;
+import com.broadcom.nbiapps.constants.OpenPullFileStatusConstants;
 import com.broadcom.nbiapps.dao.BuildAuditDAO;
 import com.broadcom.nbiapps.dao.PullRequestDataDAO;
 import com.broadcom.nbiapps.dao.SiloNameDAO;
@@ -23,12 +30,16 @@ import com.broadcom.nbiapps.entities.BuildAuditReq;
 import com.broadcom.nbiapps.entities.PullRequestData;
 import com.broadcom.nbiapps.exceptions.BuildValidationException;
 import com.broadcom.nbiapps.model.BuildAuditAddlData;
+import com.broadcom.nbiapps.model.FileChanges;
 import com.broadcom.nbiapps.model.ListOfBuildFilesReq;
 import com.broadcom.nbiapps.model.PullRequest;
 import com.broadcom.nbiapps.model.PullRequestEvent;
 import com.broadcom.nbiapps.model.ResponseBuilder;
 import com.broadcom.nbiapps.service.BuildService;
 import com.broadcom.nbiapps.util.CoreUtils;
+import com.broadcom.nbiapps.util.FileProbeUtil;
+import com.broadcom.nbiapps.util.ModulesValidator;
+import com.broadcom.nbiapps.util.PomContainer;
 
 /**
  * @author Balaji N
@@ -38,19 +49,22 @@ import com.broadcom.nbiapps.util.CoreUtils;
 public class BuildServiceImpl implements BuildService {
 
 	private static final Logger logger = LoggerFactory.getLogger(BuildServiceImpl.class);
-	
+
 	@Autowired
 	TriggerBuild triggerBuild;
-	
+
 	@Autowired
 	PullRequestDataDAO pullRequestDataDAO;
-	
+
 	@Autowired
 	SiloNameDAO siloNameDAO;
-	
+
 	@Autowired
 	BuildAuditDAO buildAuditDAO;
 	
+	@Value("${spring.allowed.filelist}")
+	private String allowedFileList;
+
 	@Override
 	public void processPullRequest(String payload) {
 		PullRequestEvent pullReq = CoreUtils.convertToObject(PullRequestEvent.class, payload);
@@ -62,14 +76,14 @@ public class BuildServiceImpl implements BuildService {
 		pullRequestData.setSiloId(siloId);
 		BeanUtils.copyProperties(pullReq, pullRequestData);
 		pullRequestDataDAO.save(pullRequestData);
-		
-		MultiValueMap<String, String> paramsMap= new LinkedMultiValueMap<String, String>();
-		paramsMap.add("SILO_ID", ""+siloId);
-		paramsMap.add("PULL_REQUEST_NUMBER", ""+pullReq.getNumber());
-		paramsMap.add("TASK_ID", ""+taskId);
+
+		MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<String, String>();
+		paramsMap.add("SILO_ID", "" + siloId);
+		paramsMap.add("PULL_REQUEST_NUMBER", "" + pullReq.getNumber());
+		paramsMap.add("TASK_ID", "" + taskId);
 		triggerBuild.jenkinsRemoteAPIBuildWithParameters(jobName, paramsMap);
 	}
-	
+
 	@Override
 	public BuildAudit saveBuildAudit(BuildAuditReq buildAuditReq) {
 		BuildAudit buildAudit = new BuildAudit();
@@ -80,22 +94,22 @@ public class BuildServiceImpl implements BuildService {
 		buildAudit.setTaskId(taskId);
 		buildAudit.setParentTaskId(taskId);
 		buildAudit.setBuildAuditAddlData(getBuildAuditAdditionalData(buildAuditReq, pullReqData));
-		
+
 		return buildAuditDAO.save(buildAudit);
 	}
-	
-	
+
 	@Override
 	public void updateBuildAudit(BuildAudit buildAuditInput) {
 		BuildAuditReq buildAuditReq = buildAuditInput.getBuildAuditReq();
-		BuildAudit buildAuditSave = buildAuditDAO.findByPullReqNumberAndBuildNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getBuildNumber(), buildAuditReq.getSiloId());
+		BuildAudit buildAuditSave = buildAuditDAO.findByPullReqNumberAndBuildNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getBuildNumber(),
+				buildAuditReq.getSiloId());
 		buildAuditSave.setStatusCode(buildAuditInput.getStatusCode());
 		BuildAuditAddlData BuildAuditAddlDataInput = buildAuditInput.getBuildAuditAddlData();
-		if(BuildAuditAddlDataInput.getReason() != null) {
+		if (BuildAuditAddlDataInput.getReason() != null) {
 			buildAuditSave.getBuildAuditAddlData().setReason(BuildAuditAddlDataInput.getReason());
 		}
 	}
-	
+
 	@Override
 	public void validatePullRequest(BuildAuditReq buildAuditReq) {
 		PullRequestData pullReqData = pullRequestDataDAO.findByPullReqNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getSiloId());
@@ -108,23 +122,94 @@ public class BuildServiceImpl implements BuildService {
 		if (!responseBuilder.isResult()) {
 			throw new BuildValidationException(responseBuilder.getResultDesc());
 		}
-		
-		//TODO: sales force task validation. 
+
+		// TODO: sales force task validation.
 	}
-	
+
 	/**
 	 * Pre-validation Checks on opening a pull request The following checks
 	 * needs to be put in place:-
 	 * 
 	 * ADD 1. Are the extensions of the files correct 2. Duplicate Files are not
 	 * present a) java files should not have the same package.
-	 *  
+	 * 
 	 * MODIFY 1. Duplicate Files are not present a) java files should not have
 	 * the same package.
+	 * @throws IOException 
+	 * @throws XmlPullParserException 
 	 */
 	@Override
-	public void preBuildValidtion(ListOfBuildFilesReq listOfFilesReq) {
-		
+	public void preBuildValidtion(ListOfBuildFilesReq listOfFilesReq)  {
+		String taskId = listOfFilesReq.getTaskId();
+		String basePath = System.getProperty("user.dir");
+		List<String> validationDetails = new ArrayList<>();
+		try {
+			for (FileChanges fileChange : listOfFilesReq.getFileChangeList()) {
+				String operation = fileChange.getOperation();
+				List<String> relativeFilePaths = fileChange.getChangeList();
+				boolean isAdded = operation.equals(OpenPullFileStatusConstants.ADD.getStrAction());
+				boolean isModified = operation.equals(OpenPullFileStatusConstants.MODIFY.getStrAction());
+				logger.info("[" + taskId + "] - Operation: [" + operation + "] Pre file validation Check to be invoked on Set " + fileChange.getChangeList().toString());
+				
+				FileProbeUtil fileProbe = new FileProbeUtil(basePath);
+				if (isAdded) {
+					ResponseBuilder areFileExtensionsCorrect = fileProbe.areFileExtensionsCorrect(allowedFileList, relativeFilePaths);
+					if (!areFileExtensionsCorrect.isResult()) {
+						validationDetails.add(areFileExtensionsCorrect.getResultDesc());
+					}
+				}
+				
+				if (isAdded || isModified) {
+					for (String relativeFilePath : relativeFilePaths) {
+						if (relativeFilePath.endsWith("pom.xml")) {
+							logger.info("relativeFilePath: " + relativeFilePath);
+							ResponseBuilder isPomCorrect = fileProbe.isPomCorrect(relativeFilePath);
+							if (!isPomCorrect.isResult()) {
+								validationDetails.add(isPomCorrect.getResultDesc());
+							}
+			
+						} else if (relativeFilePath.endsWith("java")) {
+							ResponseBuilder isFileUnique = fileProbe.isFileUnique(relativeFilePath.substring(relativeFilePath.lastIndexOf("/") + 1), "java", basePath);
+							if (!isFileUnique.isResult()) {
+								validationDetails.add(isFileUnique.getResultDesc());
+							}
+						} else {
+							logger.warn("[" + taskId + "] unhandled file operation [ " + operation + " ] ignored for validation");
+						}
+					}
+				}
+			}
+			
+			ModulesValidator modulesValidator = new ModulesValidator(basePath, taskId, listOfFilesReq.getFileChangeList());	
+			ResponseBuilder responseBuilder = modulesValidator.sonarPropertyFilePresent();
+			if (!responseBuilder.isResult()) {
+				validationDetails.add(responseBuilder.getResultDesc());
+			}
+	
+			responseBuilder = modulesValidator.sonarPropertyCorrect();
+			if (!responseBuilder.isResult()) {
+				validationDetails.add(responseBuilder.getResultDesc());
+			}
+			
+			responseBuilder =  modulesValidator.validateDeleteModuleCheck();
+			if (!responseBuilder.isResult()) {
+				validationDetails.add(responseBuilder.getResultDesc());
+			}
+			
+			responseBuilder =  modulesValidator.validateUnUsedDependenciesCheck();
+			if (!responseBuilder.isResult()) {
+				validationDetails.add(responseBuilder.getResultDesc());
+			}
+	
+			//TODO: module version check increment.
+		} catch (IOException ioe) {
+			validationDetails.add("File Not found error : " + ioe.getLocalizedMessage());
+			validationDetails.add("IOException : "+ioe);
+			throw new BuildValidationException(validationDetails, ioe);
+		} catch (XmlPullParserException xpe) {
+			validationDetails.add(" pom.xml parsing failed - " + xpe.getLocalizedMessage());
+			throw new BuildValidationException(validationDetails, xpe);
+		}
 	}
 
 	private BuildAuditAddlData getBuildAuditAdditionalData(BuildAuditReq buildAuditReq, PullRequestData pullReqData) {
@@ -138,26 +223,47 @@ public class BuildServiceImpl implements BuildService {
 		buildAuditAddlData.setBuildDuration(0);
 		buildAuditAddlData.setReason("");
 		buildAuditAddlData.setCommitterEmail("");
-		buildAuditAddlData.setCommitterFullName(""); //TODO:
+		buildAuditAddlData.setCommitterFullName(""); // TODO:
 		return buildAuditAddlData;
 	}
 
-	
-	private ResponseBuilder prechecks(String taskIdFromRef, String taskId, boolean fork, boolean isPrivate)  {
-		logger.debug("isPrivateRep: "+isPrivate);
-		if(fork) {
-		   if (!"master".equals(taskIdFromRef)) {
-			    return new ResponseBuilder(false, "Developer should open a PULL request from feature [DT or Case] branch.");
-	       }
-		} else if(!fork && isPrivate) {
-			if ("master".equals(taskIdFromRef)) {				
+
+	@Deprecated //remove this method after catch handle in main validate method -- THIS NEW METHOD
+	private String getModuleName(String basePath, String relativePath, List<String> validationDetails) {
+		String moduleDir = relativePath.substring(0, relativePath.indexOf("/"));
+		try {
+			PomContainer pomContainer = new PomContainer(basePath + "/" + moduleDir + "/pom.xml");
+			if (pomContainer.isTwoLevelModule()) {
+				int indexOfTwoLevelModuleIndex = StringUtils.ordinalIndexOf(relativePath, "/", 1);
+				String childModuleDirName = relativePath.substring(indexOfTwoLevelModuleIndex + 1, StringUtils.ordinalIndexOf(relativePath, "/", 2));
+				return moduleDir + "/" + childModuleDirName;
+			}
+		} catch (IOException ioe) {
+			validationDetails.add("File not found - [" + moduleDir + "/pom.xml]");
+			throw new BuildValidationException(validationDetails, ioe);
+		} catch (XmlPullParserException xpe) {
+			validationDetails.add("[" + moduleDir + "/pom.xml] parsing failed - " + xpe.getLocalizedMessage());
+			throw new BuildValidationException(validationDetails, xpe);
+		}
+		return moduleDir;
+	}
+
+	private ResponseBuilder prechecks(String taskIdFromRef, String taskId, boolean fork, boolean isPrivate) {
+		logger.debug("isPrivateRep: " + isPrivate);
+		if (fork) {
+			if (!"master".equals(taskIdFromRef)) {
+				return new ResponseBuilder(false, "Developer should open a PULL request from feature [DT or Case] branch.");
+			}
+		} else if (!fork && isPrivate) {
+			if ("master".equals(taskIdFromRef)) {
 				return new ResponseBuilder(false, "Developer should not open PULL Request from a master branch.");
 			}
-			
-			if(!taskId.equals(taskIdFromRef)) {
-				return new ResponseBuilder(false, "Title of the pull request should be same as feature branch name. PullRequest title passed: [" + taskId + "], It should be ["+taskIdFromRef+"]");
+
+			if (!taskId.equals(taskIdFromRef)) {
+				return new ResponseBuilder(false,
+						"Title of the pull request should be same as feature branch name. PullRequest title passed: [" + taskId + "], It should be [" + taskIdFromRef + "]");
 			}
-		} 
-	   return new ResponseBuilder(true,"");
+		}
+		return new ResponseBuilder(true, "");
 	}
 }

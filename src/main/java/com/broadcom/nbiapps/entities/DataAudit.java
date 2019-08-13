@@ -34,7 +34,7 @@ public class DataAudit implements Serializable {
 	private BigInteger buildNumber;
 
 	@Column(name="file_path", nullable=false, length=500)
-	private String filePath;
+	private String relativeFilePath;
 
 	@Column(name="md5_value", length=50)
 	private String md5Value;
@@ -69,12 +69,12 @@ public class DataAudit implements Serializable {
 		this.buildNumber = buildNumber;
 	}
 
-	public String getFilePath() {
-		return this.filePath;
+	public String getRelativeFilePath() {
+		return this.relativeFilePath;
 	}
 
-	public void setFilePath(String filePath) {
-		this.filePath = filePath;
+	public void setRelativeFilePath(String relativeFilePath) {
+		this.relativeFilePath = relativeFilePath;
 	}
 
 	public String getMd5Value() {

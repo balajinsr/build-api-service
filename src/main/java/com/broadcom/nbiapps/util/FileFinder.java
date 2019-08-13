@@ -120,20 +120,5 @@ public class FileFinder extends SimpleFileVisitor<Path> {
         System.err.println(exc);
         return CONTINUE;
     }
-	    
-	 
-//	public static void main(String[] args) {
-//		FileFinder finder = new FileFinder("/Users/sandipbose/Downloads/CodeN/toBeDeleted/NBI-Applications-PSLIB","src");
-//		//Finder finder = new Finder("/Users/sandipbose/Downloads/CodeN/toBeDeleted/NBI-Applications-PSLIB/AuthenticationScheme","QAAutomationDBLayer.java","target,test");
-//		//List<String> matchedFiles = finder.getResults(true);
-//        List<String> matchedFiles = null;
-//		try {
-//			matchedFiles = finder.getResults(false);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		System.out.println("List of files matched : "+matchedFiles);
-//		System.out.println("Count of matched files : "+matchedFiles.size());
-//	}
 }
 
