@@ -10,9 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.maven.model.Dependency;
@@ -38,7 +36,7 @@ import com.broadcom.nbiapps.model.ModuleData;
 public class BinaryAuditGenerator extends ModulesValidator {
 	private static final Logger logger = LoggerFactory.getLogger(ModulesValidator.class);
 	private String basePath;
-	private Map<ModuleData, List<Dependency>> impactedModules = new HashMap<>();
+	//private Map<ModuleData, List<Dependency>> impactedModules = new HashMap<>();
 	
 
 	/**

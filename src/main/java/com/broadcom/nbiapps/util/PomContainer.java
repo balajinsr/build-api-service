@@ -553,7 +553,7 @@ public class PomContainer {
 		} 
 		return null;
 	}
-	
+	/*
 	public static void main(String ...args) throws Exception {
 		PomContainer srcPomContainer = new PomContainer("C:/work-ca/GITHUB-Enterprise-Developer/NBI-Applications-SECURE5/pom.xml"); 
 		PomContainer deskPomContainer = new PomContainer("C:/work-ca/GITHUB-Enterprise-Developer/NBI-Applications-SECURE5/pom-dest.xml"); 
@@ -611,7 +611,7 @@ public class PomContainer {
 				&& (o2.getVersion() == o1.getVersion() || o2.getVersion().equals(o1.getVersion())))).collect(Collectors.toList());
 		System.out.println("Inherit pom - Removed dependencies from dest-pom.xml - "+removedInheritDependencies.toString());
 		
-	}
+	}*/
 	
 //	public static void main(String[] str){
 //		PomContainer parse = null;

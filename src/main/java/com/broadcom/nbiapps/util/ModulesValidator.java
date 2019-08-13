@@ -39,7 +39,6 @@ public class ModulesValidator {
 	
 	private Set<ModuleData> uniqueAddedOrModifiedModules = new HashSet<>();
 	private Set<ModuleData> uniqueDeletedModulesList = new HashSet<>();
-	private Set<String> moduleNamesTOCheckVersion = new HashSet<>();
 	
 	//TODO::: it may removed in child pom or added in root pom but not used. we need to make sure clean in root pom while validating.
 	// Make sure populate this.

@@ -46,13 +46,14 @@ public class BuildCommandGeneratorTest {
 	}
 
 	@Test
-	public void addDependenciesTest() {
+	public void addedDependenciesTest() {
 		List<Dependency> addedDependencies = destPomContainer.getDependencies().stream().filter(o1 -> srcPomContainer.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
 				&& o2.getArtifactId().equals(o1.getArtifactId())
 				&& o2.getVersion().equals(o1.getVersion())
 				&& (o2.getScope() == o1.getScope() || o2.getScope().equals(o1.getScope())))).collect(Collectors.toList());
 		logger.info("Added dependencies to dest-pom.xml - "+addedDependencies.toString());
 		Assertions.assertTrue(!addedDependencies.isEmpty());
+		//TODO: proper assert
 	}
 
 	@Test
@@ -63,17 +64,19 @@ public class BuildCommandGeneratorTest {
 				&& (o2.getScope() == o1.getScope() || o2.getScope().equals(o1.getScope())))).collect(Collectors.toList());
 		logger.info("Removed dependencies from dest-pom.xml - "+removedDependencies.toString());
 		Assertions.assertTrue(!removedDependencies.isEmpty());
+		//TODO: proper assert
 		
 	}
 	
 	
 	@Test
-	public void addInheritDependenciesTest() {
+	public void addedInheritDependenciesTest() {
 		List<Dependency> addedInheritDependencies = destInheritPomContainer.getDependencies().stream().filter(o1 -> srcInheritPomContainer.getDependencies().stream().noneMatch(o2 -> o2.getGroupId().equals(o1.getGroupId())
 				&& o2.getArtifactId().equals(o1.getArtifactId())
 				&& (o2.getVersion() == o1.getVersion() || o2.getVersion().equals(o1.getVersion())))).collect(Collectors.toList());
 		logger.info("Inherit pom - Added dependencies to dest-pom.xml - "+addedInheritDependencies.toString());
 		Assertions.assertTrue(!addedInheritDependencies.isEmpty());
+		//TODO: proper assert
 	}
 
 	@Test
@@ -83,6 +86,28 @@ public class BuildCommandGeneratorTest {
 				&& (o2.getVersion() == o1.getVersion() || o2.getVersion().equals(o1.getVersion())))).collect(Collectors.toList());
 		logger.info("Inherit pom - Removed dependencies from dest-pom.xml - "+removedInheritDependencies.toString());
 		Assertions.assertTrue(!removedInheritDependencies.isEmpty());
-		
+		//TODO: proper assert
 	}
+	
+	@Test
+	public void removedModulesTest() {
+		List<String> removedModule = srcPomContainer.getChildModules().stream().filter(o1 -> destPomContainer.getChildModules().stream().noneMatch(o2 -> o2.equals(o1))
+				).collect(Collectors.toList());
+		logger.info("Root pom - removed modules in dest-pom.xml - "+removedModule.toString());
+		Assertions.assertTrue(!removedModule.isEmpty());
+		//TODO: proper assert
+	}
+	
+	@Test
+	public void addedModulesTest() {
+		
+		
+		List<String> addedModule = destPomContainer.getChildModules().stream().filter(o1 -> srcPomContainer.getChildModules().stream().noneMatch(o2 -> o2.equals(o1))
+				).collect(Collectors.toList());
+		logger.info("added modules in dest-pom.xml - "+addedModule.toString());
+		Assertions.assertTrue(!addedModule.isEmpty());
+		//TODO: proper assert
+	}
+	
+	
 }

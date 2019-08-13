@@ -110,9 +110,7 @@ public class BuildController {
 		return ResponseEntity.ok().body(null);
 	}
 	
-	
-	
-	
+
 	@RequestMapping(method = RequestMethod.POST, value = "/hello")
 	@ResponseBody
 	public Object hello(@RequestBody SiloNameReq siloName) {
