@@ -94,20 +94,30 @@ CREATE TABLE `module_names` (
   UNIQUE KEY `module_name` (`module_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
+DROP TABLE IF EXISTS `module_artifact_audit`;
+CREATE TABLE `module_artifact_audit` (
+  `module_artifact_id` bigint(3) NOT NULL AUTO_INCREMENT,
+  `module_id` bigint(3) NOT NULL,
+  `artifact_audit_id` bigint(30) NOT NULL,
+  PRIMARY KEY (`module_artifact_id`),
+  FOREIGN KEY fk_artitfact_auditId(artifact_audit_id) REFERENCES artifacts_audit(artifact_audit_id),
+  FOREIGN KEY fk_moduleId(module_id) REFERENCES module_names(module_id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
 DROP TABLE IF EXISTS `binary_audit`;
 CREATE TABLE `binary_audit` (
   `binary_audit_id` bigint(30) NOT NULL AUTO_INCREMENT,
   `build_number` bigint(30) NOT NULL,
   `task_id` varchar(50) NOT NULL COMMENT 'dtnumber or case number',
   `silo_id` bigint(3) NOT NULL,
-   artifact_audit_id bigint(30) NOT NULL,
-   module_id bigint(3) NOT NULL,
+   module_artifact_id bigint(3) NOT NULL,
+  `artifact_audit_id` bigint(30) NOT NULL,
   `action` char(1) NOT NULL,
   `md5_value` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`binary_audit_id`),
   FOREIGN KEY fk_siloId(silo_id) REFERENCES silo_names(silo_id),
-  FOREIGN KEY fk_moduleId(module_id) REFERENCES module_names(module_id),
-  FOREIGN KEY fk_artitfact_auditId(artifact_audit_id) REFERENCES artifacts_audit(artifact_audit_id)
+  FOREIGN KEY fk_module_artifact_Id(module_artifact_id) REFERENCES module_artifact_audit(module_artifact_id),
+  FOREIGN KEY fk_artitfa_auditId(artifact_audit_id) REFERENCES artifacts_audit(artifact_audit_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `data_audit`;

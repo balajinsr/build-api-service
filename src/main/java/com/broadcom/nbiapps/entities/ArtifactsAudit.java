@@ -39,7 +39,7 @@ public class ArtifactsAudit implements Serializable {
 	private String scope;
 
 	@Column(nullable=false, length=20)
-	private String type;
+	private String type="jar";
 
 	@Column(nullable=false, length=20)
 	private String version;

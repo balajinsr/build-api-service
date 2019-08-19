@@ -1,5 +1,7 @@
 package com.broadcom.nbiapps.util;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,10 +41,17 @@ public class ModulesValidator {
 	
 	private Set<ModuleData> uniqueAddedOrModifiedModules = new HashSet<>();
 	private Set<ModuleData> uniqueDeletedModulesList = new HashSet<>();
+	private Set<String> srcChangedModules = new HashSet<>();
 	
-	//TODO::: it may removed in child pom or added in root pom but not used. we need to make sure clean in root pom while validating.
-	// Make sure populate this.
-	private List<Dependency> unUsedDependencies = new ArrayList<>();
+	
+	//validate: it may be removed in child pom or added in root pom but not used. we need to make sure clean in root pom while validating.
+	private List<Dependency> unUsedDependenciesInRootPom = new ArrayList<>();
+	
+	private boolean isRootPomAdded;
+	private boolean isRootPomModified;
+	private List<Dependency> removedDependenciesFromRootPom;
+	private List<Dependency> addedDependenciesInRootPom;
+	
 	private String siloName;
 	private String taskId;
 
@@ -62,12 +71,13 @@ public class ModulesValidator {
 		this.basePath = basePath;
 		this.setTaskId(taskId);
 		for(FileChanges fileChanges : fileChangeList) {
-			processTheFiles(fileChanges.getChangeList());
+			processTheFiles(fileChanges.getChangeList(), fileChanges.getOperation());
 		}
 	}
-
-	private void processTheFiles(List<String> relativeFilePaths) throws FileNotFoundException, IOException, XmlPullParserException {
-		siloName = basePath.substring(basePath.lastIndexOf("/") + 1);
+	
+	protected void processTheFiles(List<String> relativeFilePaths, String operation) throws FileNotFoundException, IOException, XmlPullParserException {
+		this.siloName = basePath.substring(basePath.lastIndexOf("/") + 1);
+		
 		
 		for (String relativeFilePath : relativeFilePaths) {
 			int index = relativeFilePath.indexOf("/");
@@ -78,15 +88,42 @@ public class ModulesValidator {
 				 * Covering the validation 
 				 * 
 				 */
+				List<String> changedModules = null;
 				 if(relativeFilePath.equals("pom.xml")) {
+					
 					 logger.info("prepare module list for validation: " + relativeFilePath);
-					 PomContainer srcPomContainer = new PomContainer(getBaseBranchRootPomContent("pom.xml")); 
-					 PomContainer deskPomContainer = new PomContainer(basePath+File.separator+"pom.xml"); 
-					 List<String> changedModules = srcPomContainer.getRemovedModules(deskPomContainer);
-					 changedModules.addAll(srcPomContainer.getAddedModules(deskPomContainer));
-					 for(String moduleDirName : changedModules) {
-						 populateModuleNames(moduleDirName);
+					 PomContainer modifiedPomContainer = new PomContainer(basePath+File.separator+"pom.xml"); 
+					 if("M".equals(operation)) {
+						 PomContainer originalPomContainer = new PomContainer(getBaseBranchRootPomContent("pom.xml")); 
+						 changedModules = originalPomContainer.getRemovedModules(modifiedPomContainer);
+						 changedModules.addAll(originalPomContainer.getAddedModules(modifiedPomContainer));
+						 
+						 if(modifiedPomContainer.isParentPom().isResult()) {
+							 List<Dependency> removedDependencies =  originalPomContainer.getRemovedDependencies(modifiedPomContainer);
+								removedDependenciesFromRootPom.addAll(removedDependencies);
+								logger.debug("[" + taskId + "] - removed dependecies in root pom is : "+removedDependencies.toString());
+								List<Dependency> addedDependencies = originalPomContainer.getAddedDependencies(modifiedPomContainer);
+								addedDependenciesInRootPom.addAll(addedDependencies);
+								
+								logger.debug("[" + taskId + "] - added dependecies in root pom is : "+addedDependencies.toString());
+								// below method logging for more clarity between two pom's compare.
+								modifiedPomContainer.printDependenciesChanges(removedDependencies, addedDependencies);
+								populateUnUsedDependencyList(modifiedPomContainer, addedDependencies);
+						 }
+						 isRootPomModified = true;
+					 } else if("A".equals(operation)) {
+						 isRootPomAdded = true;
+						 changedModules = modifiedPomContainer.getAddedModules(modifiedPomContainer);
+						 List<Dependency> addedDependencies = modifiedPomContainer.getDependencies();
+						 addedDependenciesInRootPom.addAll(addedDependencies);
+						 populateUnUsedDependencyList(modifiedPomContainer, addedDependencies);
 					 }
+					 
+					 for(String moduleDirName : changedModules) {
+						 String moduleAction = getModuleAction(relativeFilePaths, moduleDirName, operation);
+						 populateModuleNames(moduleDirName, false, moduleAction);
+					 }
+					 
 				 } else {
 					 logger.info("Ignore the file for module validate: " + relativeFilePath);
 				 }
@@ -94,9 +131,21 @@ public class ModulesValidator {
 			} 
 			String moduleDir = relativeFilePath.substring(0, index);
 			if(!"SILO".equals(moduleDir)) {
-				populateModuleNames(moduleDir);
+				boolean isSourceCodeChange = relativeFilePaths.stream().anyMatch(s->s.equals(moduleDir+"/src/main/java"));
+				String moduleAction = getModuleAction(relativeFilePaths, moduleDir, operation);
+				populateModuleNames(moduleDir, isSourceCodeChange, moduleAction);
 			}
 		}
+	}
+	
+	public String getModuleAction(List<String> relativeFilePaths, String moduleDir, String operation) {
+		// to set module action. it will be added/modified/deleted
+		String moduleAction = "M";
+		if("A".equals(operation)) {
+			boolean isModulePomFilePresent = relativeFilePaths.contains(moduleDir+File.separator+"pom.xml");
+			moduleAction = isModulePomFilePresent ? "A":moduleAction;
+		} 
+		return moduleAction;
 	}
 
 	/**
@@ -109,31 +158,66 @@ public class ModulesValidator {
 	 * @throws IOException
 	 * @throws XmlPullParserException
 	 */
-	private void populateModuleNames(String moduleDirName) throws FileNotFoundException, IOException, XmlPullParserException {
+	private void populateModuleNames(String moduleDirName, boolean isSourceCodeChange, String moduleAction) throws FileNotFoundException, IOException, XmlPullParserException {
 		File file = new File(basePath + "/" + moduleDirName);
 		ModuleData moduleData = null;
-		if (file.exists() && !isModuleNotExistInList(moduleDirName)) {
-			PomContainer childPomContainer = new PomContainer(basePath + "/" + moduleDirName + "/pom.xml");
-			if (childPomContainer.isTwoLevelModule()) {
-				List<String> subChildModuleNames = childPomContainer.getChildModules();
-				for (String subChildModuleName : subChildModuleNames) {
-					String subChildPomPath = moduleDirName + "/" + subChildModuleName;
-					populateModuleNames(subChildPomPath);
+		if (file.exists() ) {
+			if(!isModuleNotExistInList(moduleDirName)) {
+				PomContainer childPomContainer = new PomContainer(basePath + "/" + moduleDirName + "/pom.xml");
+				if (childPomContainer.isTwoLevelModule()) {
+					List<String> subChildModuleNames = childPomContainer.getChildModules();
+					for (String subChildModuleName : subChildModuleNames) {
+						String subChildPomPath = moduleDirName + "/" + subChildModuleName;
+						populateModuleNames(subChildPomPath, isSourceCodeChange, moduleAction);
+					}
+				} else {
+					moduleData = new ModuleData();
+					moduleData.setModuleName(moduleDirName);
+					moduleData.setTwoLevelModule(childPomContainer.isTwoLevelModule());
+					moduleData.setModuleAction(moduleAction);
+					uniqueAddedOrModifiedModules.add(moduleData);
 				}
-			} else {
-				moduleData = new ModuleData();
-				moduleData.setModuleName(moduleDirName);
-				moduleData.setTwoLevelModule(childPomContainer.isTwoLevelModule());
-				uniqueAddedOrModifiedModules.add(moduleData);
-			}
+			} 
 			
+			if(isSourceCodeChange) {
+				srcChangedModules.add(moduleDirName);
+			}
 		} else {
 			moduleData = new ModuleData();
 			moduleData.setModuleName(moduleDirName);
+			moduleData.setModuleAction("D");
 			moduleData.setTwoLevelModule(moduleDirName.contains("/"));
 			uniqueDeletedModulesList.add(moduleData);
 		}
 
+	}
+	
+	/**
+	 * @param removedDependencies - 
+	 * @return
+	 * @throws XmlPullParserException 
+	 * @throws IOException 
+	 * @throws FileNotFoundException  
+	 */
+	private void populateUnUsedDependencyList(PomContainer modifiedPomContainer, List<Dependency> removedDependencies) throws FileNotFoundException, IOException, XmlPullParserException {
+		if(removedDependencies != null && !removedDependencies.isEmpty()) {
+			List<String> childModuleList = modifiedPomContainer.getChildModules();
+			
+			for(String moduleName : childModuleList) {
+				 PomContainer childPomContainer = new PomContainer(getBasePath()+File.separator+moduleName+File.separator+"pom.xml");
+				 List<Dependency> dependencyList  = childPomContainer.getDependencies();
+				 for(Dependency dep : dependencyList) {
+					 removedDependencies.removeIf(s -> s.getArtifactId().equals(dep.getArtifactId()) && s.getGroupId().equals(dep.getArtifactId()));
+				 }
+			}
+			
+			if(!removedDependencies.isEmpty()) {
+				unUsedDependenciesInRootPom.addAll(removedDependencies);
+			}
+		} else {
+			logger.info("No removed or upgrading dependencies in root pom.xml");
+		}
+	
 	}
 
 	private boolean isModuleNotExistInList(String moduleDirName) {
@@ -208,8 +292,8 @@ public class ModulesValidator {
 	}
 	
 	public ResponseBuilder validateUnUsedDependenciesCheck() throws FileNotFoundException, IOException, XmlPullParserException {
-		if (!unUsedDependencies.isEmpty()) {
-			return sendResult(false, "The dependencies should be ["+unUsedDependencies.toString()+"] removed from [" + basePath + "/pom.xml] under <dependencyManagment> section.");
+		if (!unUsedDependenciesInRootPom.isEmpty()) {
+			return sendResult(false, "The dependencies should be ["+unUsedDependenciesInRootPom.toString()+"] removed from [" + basePath + "/pom.xml] under <dependencyManagment> section.");
 		}
 		return sendResult(true);
 	}
@@ -329,5 +413,37 @@ public class ModulesValidator {
 
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
+	}
+	
+	public String getSiloName() {
+		return siloName;
+	}
+
+	public void setSiloName(String siloName) {
+		this.siloName = siloName;
+	}
+
+	public List<Dependency> getAddedDependenciesInRootPom() {
+		return addedDependenciesInRootPom;
+	}
+
+	public void setAddedDependenciesInRootPom(List<Dependency> addedDependenciesInRootPom) {
+		this.addedDependenciesInRootPom = addedDependenciesInRootPom;
+	}
+
+	public List<Dependency> getRemovedDependenciesFromRootPom() {
+		return removedDependenciesFromRootPom;
+	}
+
+	public void setRemovedDependenciesFromRootPom(List<Dependency> removedDependenciesFromRootPom) {
+		this.removedDependenciesFromRootPom = removedDependenciesFromRootPom;
+	}
+
+	public boolean isRootPomAdded() {
+		return isRootPomAdded;
+	}
+
+	public boolean isRootPomModified() {
+		return isRootPomModified;
 	}
 }

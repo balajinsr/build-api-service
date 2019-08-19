@@ -11,12 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
+
+import com.broadcom.nbiapps.util.ApplicationConfig;
 
 /**
  * @author Balaji N
  *
  */
 @SpringBootTest
+@ContextConfiguration(classes = ApplicationConfig.class)
 public class JenkinsTriggerTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(JenkinsTriggerTest.class);

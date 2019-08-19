@@ -3,14 +3,20 @@
  */
 package com.broadcom.nbiapps.model;
 
+import java.util.List;
+
 /**
  * @author Balaji N
  *
  */
 public class ModuleData {
 	private String moduleName;
+	private String moduleAction;
+	private boolean isPomChanged;
+	private boolean isSourceChanged;
 	private boolean twoLevelModule;
 	
+	private List<ModuleDependency> moduleArtifacts;
 	
 	public String getModuleName() {
 		return moduleName;
@@ -57,5 +63,37 @@ public class ModuleData {
 	@Override
 	public String toString() {
 		return "ModuleData [moduleName=" + moduleName + ", twoLevelModule=" + twoLevelModule + "]";
+	}
+
+	public String getModuleAction() {
+		return moduleAction;
+	}
+
+	public void setModuleAction(String moduleAction) {
+		this.moduleAction = moduleAction;
+	}
+
+	public List<ModuleDependency> getModuleArtifacts() {
+		return moduleArtifacts;
+	}
+
+	public void setModuleArtifacts(List<ModuleDependency> moduleArtifacts) {
+		this.moduleArtifacts = moduleArtifacts;
+	}
+
+	public String getIsSourceChanged() {
+		return isSourceChanged;
+	}
+
+	public void setIsSourceChanged(String isSourceChanged) {
+		this.isSourceChanged = isSourceChanged;
+	}
+
+	public boolean isPomChanged() {
+		return isPomChanged;
+	}
+
+	public void setPomChanged(boolean isPomChanged) {
+		this.isPomChanged = isPomChanged;
 	}
 }

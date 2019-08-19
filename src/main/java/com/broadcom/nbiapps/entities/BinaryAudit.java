@@ -20,29 +20,30 @@ public class BinaryAudit implements Serializable {
 	@Column(name="binary_audit_id")
 	private BigInteger binaryAuditId;
 
-	private String action;
+	
 
 	@Column(name="build_number")
 	private BigInteger buildNumber;
 
-	@Column(name="md5_value")
-	private String md5Value;
-
+	
 	@Column(name="task_id")
 	private String taskId;
 
-	//bi-directional many-to-one association to ArtifactsAudit
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.MERGE)
 	@JoinColumn(name="artifact_audit_id")
 	private ArtifactsAudit artifactsAudit;
 
-	//bi-directional many-to-one association to ModuleName
-	@ManyToOne
-	@JoinColumn(name="module_id")
+	private String action;
+
+	@Column(name="md5_value")
+	private String md5Value;
+
+	
+	@ManyToOne(cascade = CascadeType.MERGE)
+	@Column(name="module_id")
 	private ModuleName moduleName;
 
-	//bi-directional many-to-one association to SiloName
-	@ManyToOne
+	@ManyToOne(targetEntity=SiloName.class, cascade = CascadeType.MERGE)
 	@JoinColumn(name="silo_id")
 	private SiloName siloName;
 
