@@ -6,8 +6,10 @@ package com.broadcom.nbiapps.controller;
 import java.math.BigInteger;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.broadcom.nbiapps.dao.SiloNameDAO;
 import com.broadcom.nbiapps.entities.SiloName;
@@ -18,6 +20,7 @@ import com.broadcom.nbiapps.entities.SiloNameReq;
  *
  */
 @SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class AdminControllerTest {
 
 	@Autowired

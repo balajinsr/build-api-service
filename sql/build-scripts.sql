@@ -72,18 +72,18 @@ CREATE TABLE `build_audit` (
   --  build-duration
   --  mergecommit_url
   
-DROP TABLE IF EXISTS `artifacts_audit`;
-CREATE TABLE `artifacts_audit` (
-  `artifact_audit_id` bigint(30) NOT NULL AUTO_INCREMENT,
-  `group_id` varchar(100) NOT NULL,
-  `artifact_id` varchar(100) NOT NULL,
-  `version` varchar(20) NOT NULL,
-  `classifier` varchar(20) NULL,
-  `type` varchar(20) NOT NULL DEFAULT 'jar',
-  `scope` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`artifact_audit_id`),
-  UNIQUE KEY `artifact_audit` (`group_id`,`artifact_id`,`version`,`scope`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+--DROP TABLE IF EXISTS `artifacts_audit`;
+--CREATE TABLE `artifacts_audit` (
+--  `artifact_audit_id` bigint(30) NOT NULL AUTO_INCREMENT,
+--  `group_id` varchar(100) NOT NULL,
+--  `artifact_id` varchar(100) NOT NULL,
+--  `version` varchar(20) NOT NULL,
+--  `classifier` varchar(20) NULL,
+--  `type` varchar(20) NOT NULL DEFAULT 'jar',
+--  `scope` varchar(20) DEFAULT NULL,
+--  PRIMARY KEY (`artifact_audit_id`),
+--  UNIQUE KEY `artifact_audit` (`group_id`,`artifact_id`,`version`,`scope`)
+-- ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `module_names`;
 CREATE TABLE `module_names` (
@@ -94,15 +94,15 @@ CREATE TABLE `module_names` (
   UNIQUE KEY `module_name` (`module_name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `module_artifact_audit`;
-CREATE TABLE `module_artifact_audit` (
-  `module_artifact_id` bigint(3) NOT NULL AUTO_INCREMENT,
-  `module_id` bigint(3) NOT NULL,
-  `artifact_audit_id` bigint(30) NOT NULL,
-  PRIMARY KEY (`module_artifact_id`),
-  FOREIGN KEY fk_artitfact_auditId(artifact_audit_id) REFERENCES artifacts_audit(artifact_audit_id),
-  FOREIGN KEY fk_moduleId(module_id) REFERENCES module_names(module_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+-- DROP TABLE IF EXISTS `module_artifact_audit`;
+-- CREATE TABLE `module_artifact_audit` (
+--  `module_artifact_id` bigint(3) NOT NULL AUTO_INCREMENT,
+--  `module_id` bigint(3) NOT NULL,
+--  `artifact_audit_id` bigint(30) NOT NULL,
+--  PRIMARY KEY (`module_artifact_id`),
+--  FOREIGN KEY fk_artitfact_auditId(artifact_audit_id) REFERENCES artifacts_audit(artifact_audit_id),
+--  FOREIGN KEY fk_moduleId(module_id) REFERENCES module_names(module_id)
+-- ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `binary_audit`;
 CREATE TABLE `binary_audit` (
@@ -110,14 +110,12 @@ CREATE TABLE `binary_audit` (
   `build_number` bigint(30) NOT NULL,
   `task_id` varchar(50) NOT NULL COMMENT 'dtnumber or case number',
   `silo_id` bigint(3) NOT NULL,
-   module_artifact_id bigint(3) NOT NULL,
-  `artifact_audit_id` bigint(30) NOT NULL,
-  `action` char(1) NOT NULL,
-  `md5_value` varchar(50) DEFAULT NULL,
+  `module_id` bigint(3) NOT NULL,
+  `module_data` longtext NULL,
+  `common_data` longtext NULL,
   PRIMARY KEY (`binary_audit_id`),
   FOREIGN KEY fk_siloId(silo_id) REFERENCES silo_names(silo_id),
-  FOREIGN KEY fk_module_artifact_Id(module_artifact_id) REFERENCES module_artifact_audit(module_artifact_id),
-  FOREIGN KEY fk_artitfa_auditId(artifact_audit_id) REFERENCES artifacts_audit(artifact_audit_id)
+  FOREIGN KEY fk_module_Id(module_id) REFERENCES module_names(module_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=latin1;
 
 DROP TABLE IF EXISTS `data_audit`;

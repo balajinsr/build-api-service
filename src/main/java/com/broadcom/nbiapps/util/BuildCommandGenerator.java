@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -54,7 +55,6 @@ public class BuildCommandGenerator extends ModulesValidator {
 			PomContainer modifiedPomContainer = new PomContainer(getBasePath()+File.separator+"pom.xml");
 			addImpactedModulesForCompile(modifiedPomContainer, getAddedDependenciesInRootPom());
 			logger.debug("[" + taskId + "] - following dependencies removed or upgraded - [+removedDependencies+], so impacted modules to recompile : ["+impactedModuleForCompile.toString()+"]");
-			impactedModuleForCompile.addAll(getUniqueAddedOrModifiedModules());
 		}
 		
 	}
@@ -105,7 +105,7 @@ public class BuildCommandGenerator extends ModulesValidator {
 		StringBuilder buildCommand = new StringBuilder();
 		String command = "mvn clean install -DskipTests=true";
 		List<ModuleData> moduleList = new ArrayList<>(impactedModuleForCompile);
-
+		moduleList.addAll(getUniqueAddedOrModifiedModulesMap().values());
 		Collections.sort(moduleList, new ModuleNamesSort());
 		for (ModuleData moduleData : moduleList) {
 			if (buildCommand.length() == 0) {

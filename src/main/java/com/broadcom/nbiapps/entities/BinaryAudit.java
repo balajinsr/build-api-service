@@ -1,8 +1,22 @@
 package com.broadcom.nbiapps.entities;
 
 import java.io.Serializable;
-import javax.persistence.*;
 import java.math.BigInteger;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+
+import com.broadcom.nbiapps.model.ModuleData;
 
 
 /**
@@ -20,32 +34,29 @@ public class BinaryAudit implements Serializable {
 	@Column(name="binary_audit_id")
 	private BigInteger binaryAuditId;
 
-	
-
 	@Column(name="build_number")
 	private BigInteger buildNumber;
 
+	@ManyToOne(cascade = CascadeType.MERGE)
+	@JoinColumn(name="silo_id")
+	private SiloName siloName;
 	
 	@Column(name="task_id")
 	private String taskId;
 
 	@ManyToOne(cascade = CascadeType.MERGE)
-	@JoinColumn(name="artifact_audit_id")
-	private ArtifactsAudit artifactsAudit;
-
-	private String action;
-
-	@Column(name="md5_value")
-	private String md5Value;
-
-	
-	@ManyToOne(cascade = CascadeType.MERGE)
-	@Column(name="module_id")
+	@JoinColumn(name="module_id")	
 	private ModuleName moduleName;
 
-	@ManyToOne(targetEntity=SiloName.class, cascade = CascadeType.MERGE)
-	@JoinColumn(name="silo_id")
-	private SiloName siloName;
+	@Lob
+	@Column(name="module_data")
+	@Convert(converter = ModuleDataConverter.class)
+	private ModuleData moduleData;
+	
+	@Lob
+	@Column(name="common_data")
+	@Convert(converter = CommonDataConverter.class)
+	private CommonData commonData;
 
 	public BinaryAudit() {
 	}
@@ -58,14 +69,6 @@ public class BinaryAudit implements Serializable {
 		this.binaryAuditId = binaryAuditId;
 	}
 
-	public String getAction() {
-		return this.action;
-	}
-
-	public void setAction(String action) {
-		this.action = action;
-	}
-
 	public BigInteger getBuildNumber() {
 		return this.buildNumber;
 	}
@@ -74,28 +77,12 @@ public class BinaryAudit implements Serializable {
 		this.buildNumber = buildNumber;
 	}
 
-	public String getMd5Value() {
-		return this.md5Value;
-	}
-
-	public void setMd5Value(String md5Value) {
-		this.md5Value = md5Value;
-	}
-
 	public String getTaskId() {
 		return this.taskId;
 	}
 
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
-	}
-
-	public ArtifactsAudit getArtifactsAudit() {
-		return this.artifactsAudit;
-	}
-
-	public void setArtifactsAudit(ArtifactsAudit artifactsAudit) {
-		this.artifactsAudit = artifactsAudit;
 	}
 
 	public ModuleName getModuleName() {

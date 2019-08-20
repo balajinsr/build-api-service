@@ -9,8 +9,6 @@ import org.apache.maven.model.Dependency;
  * @author Balaji N
  *
  */
-
-
 public class ModuleDependency extends Dependency {	
 	private static final long serialVersionUID = 1L;
 	
@@ -41,4 +39,6 @@ public class ModuleDependency extends Dependency {
 	public void setAction(String action) {
 		this.action = action;
 	}	
+	
+	
 }

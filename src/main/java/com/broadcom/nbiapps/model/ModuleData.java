@@ -9,14 +9,21 @@ import java.util.List;
  * @author Balaji N
  *
  */
+
 public class ModuleData {
 	private String moduleName;
 	private String moduleAction;
-	private boolean isPomChanged;
-	private boolean isSourceChanged;
-	private boolean twoLevelModule;
 	
-	private List<ModuleDependency> moduleArtifacts;
+	
+	// module artifacts as list - both added and deleted
+    private List<ModuleDependency> moduleArtifacts;
+    private List<ModuleDependency> moduleDependencies;
+    
+	
+	// module pom action with added or modified
+	private boolean twoLevelModule;
+	private String pomAction;
+	private boolean isSourceChanged;
 	
 	public String getModuleName() {
 		return moduleName;
@@ -81,19 +88,27 @@ public class ModuleData {
 		this.moduleArtifacts = moduleArtifacts;
 	}
 
-	public String getIsSourceChanged() {
+	public String getPomAction() {
+		return pomAction;
+	}
+
+	public void setPomAction(String pomAction) {
+		this.pomAction = pomAction;
+	}
+
+	public boolean isSourceChanged() {
 		return isSourceChanged;
 	}
 
-	public void setIsSourceChanged(String isSourceChanged) {
+	public void setSourceChanged(boolean isSourceChanged) {
 		this.isSourceChanged = isSourceChanged;
 	}
 
-	public boolean isPomChanged() {
-		return isPomChanged;
+	public List<ModuleDependency> getModuleDependencies() {
+		return moduleDependencies;
 	}
 
-	public void setPomChanged(boolean isPomChanged) {
-		this.isPomChanged = isPomChanged;
+	public void setModuleDependencies(List<ModuleDependency> moduleDependencies) {
+		this.moduleDependencies = moduleDependencies;
 	}
 }

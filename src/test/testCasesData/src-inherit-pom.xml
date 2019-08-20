@@ -1,0 +1,42 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ca.nbiapps</groupId>
+	<artifactId>nbiservice-otpsampleImpl</artifactId>
+	<version>1.0.0</version>
+	<name>otpsampleImpl</name>
+	<packaging>jar</packaging>
+
+	<parent>
+		<groupId>com.ca.nbiapps</groupId>
+		<artifactId>issuers</artifactId>
+		<relativePath>..</relativePath>
+		<version>1.0.0</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.ca.nbiapps</groupId>
+			<artifactId>nbi-apps-transfort</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.ca.nbiapps</groupId>
+			<artifactId>nbi-apps-authenticationscheme</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+			        <groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>

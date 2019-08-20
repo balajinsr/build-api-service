@@ -1,7 +1,5 @@
 package com.broadcom.nbiapps.util;
 
-import static java.util.stream.Collectors.toList;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -9,8 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -37,11 +38,16 @@ import com.broadcom.nbiapps.model.ResponseBuilder;
 
 public class ModulesValidator {
 	private static final Logger logger = LoggerFactory.getLogger(ModulesValidator.class);
-	private String basePath;
 	
-	private Set<ModuleData> uniqueAddedOrModifiedModules = new HashSet<>();
+	public static final String ADDED = "A";
+	public static final String MODIFIED = "M";
+	public static final String DELETED="D";
+	
+	private String basePath;
+	private Map<String, ModuleData> uniqueAddedOrModifiedModulesMap = new HashMap<>();
 	private Set<ModuleData> uniqueDeletedModulesList = new HashSet<>();
 	private Set<String> srcChangedModules = new HashSet<>();
+	
 	
 	
 	//validate: it may be removed in child pom or added in root pom but not used. we need to make sure clean in root pom while validating.
@@ -93,7 +99,7 @@ public class ModulesValidator {
 					
 					 logger.info("prepare module list for validation: " + relativeFilePath);
 					 PomContainer modifiedPomContainer = new PomContainer(basePath+File.separator+"pom.xml"); 
-					 if("M".equals(operation)) {
+					 if(MODIFIED.equals(operation)) {
 						 PomContainer originalPomContainer = new PomContainer(getBaseBranchRootPomContent("pom.xml")); 
 						 changedModules = originalPomContainer.getRemovedModules(modifiedPomContainer);
 						 changedModules.addAll(originalPomContainer.getAddedModules(modifiedPomContainer));
@@ -111,7 +117,7 @@ public class ModulesValidator {
 								populateUnUsedDependencyList(modifiedPomContainer, addedDependencies);
 						 }
 						 isRootPomModified = true;
-					 } else if("A".equals(operation)) {
+					 } else if(ADDED.equals(operation)) {
 						 isRootPomAdded = true;
 						 changedModules = modifiedPomContainer.getAddedModules(modifiedPomContainer);
 						 List<Dependency> addedDependencies = modifiedPomContainer.getDependencies();
@@ -120,8 +126,8 @@ public class ModulesValidator {
 					 }
 					 
 					 for(String moduleDirName : changedModules) {
-						 String moduleAction = getModuleAction(relativeFilePaths, moduleDirName, operation);
-						 populateModuleNames(moduleDirName, false, moduleAction);
+						 String moduleAction = getModuleAction(relativeFilePath, moduleDirName, operation);
+						 populateModuleNames(moduleDirName, false, operation, moduleAction);
 					 }
 					 
 				 } else {
@@ -131,18 +137,19 @@ public class ModulesValidator {
 			} 
 			String moduleDir = relativeFilePath.substring(0, index);
 			if(!"SILO".equals(moduleDir)) {
-				boolean isSourceCodeChange = relativeFilePaths.stream().anyMatch(s->s.equals(moduleDir+"/src/main/java"));
-				String moduleAction = getModuleAction(relativeFilePaths, moduleDir, operation);
-				populateModuleNames(moduleDir, isSourceCodeChange, moduleAction);
+				boolean isSourceCodeChange = relativeFilePath.contains(moduleDir+"/src/main/java");
+				String isPomFileAction = relativeFilePath.contains(moduleDir+"/pom.xml")?operation:null;
+				String moduleAction = getModuleAction(relativeFilePath, moduleDir, operation);
+				populateModuleNames(moduleDir, isSourceCodeChange, isPomFileAction, moduleAction);
 			}
 		}
 	}
 	
-	public String getModuleAction(List<String> relativeFilePaths, String moduleDir, String operation) {
+	public String getModuleAction(String relativeFilePath, String moduleDir, String operation) {
 		// to set module action. it will be added/modified/deleted
 		String moduleAction = "M";
 		if("A".equals(operation)) {
-			boolean isModulePomFilePresent = relativeFilePaths.contains(moduleDir+File.separator+"pom.xml");
+			boolean isModulePomFilePresent = relativeFilePath.contains(moduleDir+File.separator+"pom.xml");
 			moduleAction = isModulePomFilePresent ? "A":moduleAction;
 		} 
 		return moduleAction;
@@ -158,28 +165,43 @@ public class ModulesValidator {
 	 * @throws IOException
 	 * @throws XmlPullParserException
 	 */
-	private void populateModuleNames(String moduleDirName, boolean isSourceCodeChange, String moduleAction) throws FileNotFoundException, IOException, XmlPullParserException {
+	private void populateModuleNames(String moduleDirName, boolean isSourceCodeChanged, String pomFileAction, String moduleAction) throws FileNotFoundException, IOException, XmlPullParserException {
 		File file = new File(basePath + "/" + moduleDirName);
 		ModuleData moduleData = null;
-		if (file.exists() ) {
-			if(!isModuleNotExistInList(moduleDirName)) {
-				PomContainer childPomContainer = new PomContainer(basePath + "/" + moduleDirName + "/pom.xml");
+		if (file.exists() ) {			
+			if(uniqueAddedOrModifiedModulesMap.containsKey(moduleDirName)) {
+				if(isSourceCodeChanged) {
+					uniqueAddedOrModifiedModulesMap.get(moduleDirName).setSourceChanged(isSourceCodeChanged);
+				}
+				
+				if(pomFileAction != null) {
+					uniqueAddedOrModifiedModulesMap.get(moduleDirName).setPomAction(pomFileAction);
+				}
+				
+				if(moduleAction != null && ADDED.equals(moduleAction)) {
+					uniqueAddedOrModifiedModulesMap.get(moduleDirName).setModuleAction(moduleAction);
+				}
+			} else {
+				//to find module is two level or one level
+				PomContainer childPomContainer = new PomContainer(basePath + File.separator + moduleDirName + "/pom.xml");
 				if (childPomContainer.isTwoLevelModule()) {
 					List<String> subChildModuleNames = childPomContainer.getChildModules();
 					for (String subChildModuleName : subChildModuleNames) {
-						String subChildPomPath = moduleDirName + "/" + subChildModuleName;
-						populateModuleNames(subChildPomPath, isSourceCodeChange, moduleAction);
+						String subChildPomPath = moduleDirName + File.separator + subChildModuleName;
+						populateModuleNames(subChildPomPath, isSourceCodeChanged, pomFileAction, moduleAction);
 					}
 				} else {
 					moduleData = new ModuleData();
 					moduleData.setModuleName(moduleDirName);
 					moduleData.setTwoLevelModule(childPomContainer.isTwoLevelModule());
 					moduleData.setModuleAction(moduleAction);
-					uniqueAddedOrModifiedModules.add(moduleData);
+					moduleData.setPomAction(pomFileAction);
+					moduleData.setSourceChanged(isSourceCodeChanged);
+					uniqueAddedOrModifiedModulesMap.put(moduleDirName, moduleData);
 				}
-			} 
+			}
 			
-			if(isSourceCodeChange) {
+			if(isSourceCodeChanged) {
 				srcChangedModules.add(moduleDirName);
 			}
 		} else {
@@ -220,9 +242,6 @@ public class ModulesValidator {
 	
 	}
 
-	private boolean isModuleNotExistInList(String moduleDirName) {
-		return uniqueAddedOrModifiedModules.stream().anyMatch(s -> s.getModuleName().equals(moduleDirName));
-	}
 
 	public ResponseBuilder sonarPropertyFilePresent() {
 		File file = new File(basePath + File.separator + "/sonar-project.properties");
@@ -233,7 +252,7 @@ public class ModulesValidator {
 	}
 
 	public ResponseBuilder sonarPropertyCorrect() throws FileNotFoundException, IOException, XmlPullParserException {
-		if (!uniqueAddedOrModifiedModules.isEmpty()) {
+		if (!uniqueAddedOrModifiedModulesMap.isEmpty()) {
 			Properties sonarProp = getSonarProperties();
 			String sonarModulesStr = (String) sonarProp.get("sonar.modules");
 			List<String> sonarModules = Arrays.asList(Arrays.stream(sonarModulesStr.split(",")).map(String::trim).toArray(String[]::new));
@@ -242,7 +261,11 @@ public class ModulesValidator {
 			}
 
 			PomContainer pomContainer;
-			for (ModuleData moduleData : uniqueAddedOrModifiedModules) {
+			Iterator<String> it = uniqueAddedOrModifiedModulesMap.keySet().iterator();
+			
+			while(it.hasNext()) {
+				String key = it.next();
+				ModuleData moduleData = uniqueAddedOrModifiedModulesMap.get(key);
 				String moduleName = moduleData.getModuleName();
 				pomContainer = new PomContainer(basePath + "/" + moduleName + "/pom.xml");
 
@@ -391,12 +414,8 @@ public class ModulesValidator {
 	}
 
 	
-	public Set<ModuleData> getUniqueAddedOrModifiedModules() {
-		return uniqueAddedOrModifiedModules;
-	}
-
-	public void setUniqueAddedOrModifiedModules(Set<ModuleData> uniqueAddedOrModifiedModules) {
-		this.uniqueAddedOrModifiedModules = uniqueAddedOrModifiedModules;
+	public Map<String,ModuleData> getUniqueAddedOrModifiedModulesMap() {
+		return uniqueAddedOrModifiedModulesMap;
 	}
 
 	public Set<ModuleData> getUniqueDeletedModulesList() {

@@ -7,10 +7,12 @@ import java.math.BigInteger;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.broadcom.nbiapps.entities.PullRequestData;
 import com.broadcom.nbiapps.model.PullRequest;
@@ -21,6 +23,7 @@ import com.broadcom.nbiapps.model.PullRequest;
  */
 
 @SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class PullRequestDataDAOTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(PullRequestDataDAOTest.class);

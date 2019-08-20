@@ -8,9 +8,11 @@ import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * @author Balaji N
@@ -18,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 
 @SpringBootTest
+@ExtendWith(SpringExtension.class)
 public class FileFinderTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(FileFinderTest.class);
