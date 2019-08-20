@@ -118,6 +118,19 @@ CREATE TABLE `binary_audit` (
   FOREIGN KEY fk_module_Id(module_id) REFERENCES module_names(module_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=latin1;
 
+
+DROP TABLE IF EXISTS `common_binary_audit`;
+CREATE TABLE `common_binary_audit` (
+  `common_binary_audit_id` bigint(30) NOT NULL AUTO_INCREMENT,
+  `build_number` bigint(30) NOT NULL,
+  `task_id` varchar(50) NOT NULL COMMENT 'dtnumber or case number',
+  `silo_id` bigint(3) NOT NULL,
+  `common_data` longtext NULL,
+  PRIMARY KEY (`common_binary_audit_id`),
+  FOREIGN KEY fk_common_siloId(silo_id) REFERENCES silo_names(silo_id)
+) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=latin1;
+
+
 DROP TABLE IF EXISTS `data_audit`;
 CREATE TABLE `data_audit` (
   `data_audit_id` bigint(30) NOT NULL AUTO_INCREMENT,

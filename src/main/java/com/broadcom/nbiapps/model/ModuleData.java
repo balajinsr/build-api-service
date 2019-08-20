@@ -3,6 +3,7 @@
  */
 package com.broadcom.nbiapps.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,8 +17,8 @@ public class ModuleData {
 	
 	
 	// module artifacts as list - both added and deleted
-    private List<ModuleDependency> moduleArtifacts;
-    private List<ModuleDependency> moduleDependencies;
+    private List<ModuleDependency> moduleArtifacts = new ArrayList<>();
+    private List<ModuleDependency> moduleDependencies = new ArrayList<>();
     
 	
 	// module pom action with added or modified

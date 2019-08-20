@@ -55,8 +55,8 @@ public class ModulesValidator {
 	
 	private boolean isRootPomAdded;
 	private boolean isRootPomModified;
-	private List<Dependency> removedDependenciesFromRootPom;
-	private List<Dependency> addedDependenciesInRootPom;
+	private List<Dependency> removedDependenciesFromRootPom = new ArrayList<>();
+	private List<Dependency> addedDependenciesInRootPom = new ArrayList<>();
 	
 	private String siloName;
 	private String taskId;
@@ -119,7 +119,7 @@ public class ModulesValidator {
 						 isRootPomModified = true;
 					 } else if(ADDED.equals(operation)) {
 						 isRootPomAdded = true;
-						 changedModules = modifiedPomContainer.getAddedModules(modifiedPomContainer);
+						 changedModules = modifiedPomContainer.getChildModules();
 						 List<Dependency> addedDependencies = modifiedPomContainer.getDependencies();
 						 addedDependenciesInRootPom.addAll(addedDependencies);
 						 populateUnUsedDependencyList(modifiedPomContainer, addedDependencies);
@@ -215,33 +215,34 @@ public class ModulesValidator {
 	}
 	
 	/**
-	 * @param removedDependencies - 
+	 * @param addedDependencies - 
 	 * @return
 	 * @throws XmlPullParserException 
 	 * @throws IOException 
 	 * @throws FileNotFoundException  
 	 */
-	private void populateUnUsedDependencyList(PomContainer modifiedPomContainer, List<Dependency> removedDependencies) throws FileNotFoundException, IOException, XmlPullParserException {
-		if(removedDependencies != null && !removedDependencies.isEmpty()) {
+	private void populateUnUsedDependencyList(PomContainer modifiedPomContainer, List<Dependency> addedDependencies) throws FileNotFoundException, IOException, XmlPullParserException {
+		if(addedDependencies != null && !addedDependencies.isEmpty()) {
 			List<String> childModuleList = modifiedPomContainer.getChildModules();
 			
 			for(String moduleName : childModuleList) {
 				 PomContainer childPomContainer = new PomContainer(getBasePath()+File.separator+moduleName+File.separator+"pom.xml");
 				 List<Dependency> dependencyList  = childPomContainer.getDependencies();
 				 for(Dependency dep : dependencyList) {
-					 removedDependencies.removeIf(s -> s.getArtifactId().equals(dep.getArtifactId()) && s.getGroupId().equals(dep.getArtifactId()));
+					 // removing from addedDependencies if exist in through the child modules. 
+					 addedDependencies.removeIf(s -> s.getArtifactId().equals(dep.getArtifactId()) && s.getGroupId().equals(dep.getArtifactId()));
 				 }
 			}
 			
-			if(!removedDependencies.isEmpty()) {
-				unUsedDependenciesInRootPom.addAll(removedDependencies);
+			// means - unused dependencies there in root pom.
+			if(!addedDependencies.isEmpty()) {
+				unUsedDependenciesInRootPom.addAll(addedDependencies);
 			}
 		} else {
 			logger.info("No removed or upgrading dependencies in root pom.xml");
 		}
 	
 	}
-
 
 	public ResponseBuilder sonarPropertyFilePresent() {
 		File file = new File(basePath + File.separator + "/sonar-project.properties");
@@ -396,6 +397,8 @@ public class ModulesValidator {
 		}
 		return result;
 	}
+	
+	
 
 	private static ResponseBuilder sendResult(boolean result) {
 		return sendResult(result, "");

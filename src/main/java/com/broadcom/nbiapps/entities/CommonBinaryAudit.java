@@ -16,23 +16,21 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import com.broadcom.nbiapps.model.ModuleData;
-
 
 /**
  * The persistent class for the binary_audit database table.
  * 
  */
 @Entity
-@Table(name="binary_audit")
-@NamedQuery(name="BinaryAudit.findAll", query="SELECT b FROM BinaryAudit b")
-public class BinaryAudit implements Serializable {
+@Table(name="common_binary_audit")
+@NamedQuery(name="CommonBinaryAudit.findAll", query="SELECT b FROM CommonBinaryAudit b")
+public class CommonBinaryAudit implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(name="binary_audit_id")
-	private BigInteger binaryAuditId;
+	@Column(name="common_binary_audit_id")
+	private BigInteger commonBinaryAuditId;
 
 	@Column(name="build_number")
 	private BigInteger buildNumber;
@@ -44,69 +42,44 @@ public class BinaryAudit implements Serializable {
 	@Column(name="task_id")
 	private String taskId;
 
-	@ManyToOne(cascade = CascadeType.MERGE)
-	@JoinColumn(name="module_id")	
-	private ModuleName moduleName;
-
-	@Lob
-	@Column(name="module_data")
-	@Convert(converter = ModuleDataConverter.class)
-	private ModuleData moduleData;
-	
 	@Lob
 	@Column(name="common_data")
 	@Convert(converter = CommonDataConverter.class)
 	private CommonData commonData;
 
-	public BinaryAudit() {
+	public CommonBinaryAudit() {
 	}
 
-	public BigInteger getBinaryAuditId() {
-		return this.binaryAuditId;
+	public BigInteger getCommonBinaryAuditId() {
+		return commonBinaryAuditId;
 	}
 
-	public void setBinaryAuditId(BigInteger binaryAuditId) {
-		this.binaryAuditId = binaryAuditId;
+	public void setCommonBinaryAuditId(BigInteger commonBinaryAuditId) {
+		this.commonBinaryAuditId = commonBinaryAuditId;
 	}
 
 	public BigInteger getBuildNumber() {
-		return this.buildNumber;
+		return buildNumber;
 	}
 
 	public void setBuildNumber(BigInteger buildNumber) {
 		this.buildNumber = buildNumber;
 	}
 
-	public String getTaskId() {
-		return this.taskId;
-	}
-
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
-
-	public ModuleName getModuleName() {
-		return this.moduleName;
-	}
-
-	public void setModuleName(ModuleName moduleName) {
-		this.moduleName = moduleName;
-	}
-
 	public SiloName getSiloName() {
-		return this.siloName;
+		return siloName;
 	}
 
 	public void setSiloName(SiloName siloName) {
 		this.siloName = siloName;
 	}
 
-	public ModuleData getModuleData() {
-		return moduleData;
+	public String getTaskId() {
+		return taskId;
 	}
 
-	public void setModuleData(ModuleData moduleData) {
-		this.moduleData = moduleData;
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
 	}
 
 	public CommonData getCommonData() {
@@ -116,5 +89,4 @@ public class BinaryAudit implements Serializable {
 	public void setCommonData(CommonData commonData) {
 		this.commonData = commonData;
 	}
-
 }
