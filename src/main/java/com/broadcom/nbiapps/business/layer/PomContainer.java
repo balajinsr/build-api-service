@@ -1,4 +1,4 @@
-package com.broadcom.nbiapps.util;
+package com.broadcom.nbiapps.business.layer;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
