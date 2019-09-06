@@ -1,0 +1,17 @@
+improvements:
+- colors in jenkins console
+- details with list of validations in addldetails. - in build_audit
+- get all configuration details by api call .. apart from build service url. - This is for shell scripts.
+- validation on request API's - before proceeding to process.
+- add index for tables.
+
+validation:
+- stop building if previous module version jars is not deployed. against with different DT but not with same DT/case, by category of same module -{This is becuase module dependencies is missing if we allow}
+- first level module jars should not use in same level other module.  {it should go to common}
+- validation time. logging into db.. that is: impacted modules because of dependency changed. against each dependency against module list. - audit in addldetails column in build-audit.
+-  
+
+bugs:
+ - 
+
+- 
