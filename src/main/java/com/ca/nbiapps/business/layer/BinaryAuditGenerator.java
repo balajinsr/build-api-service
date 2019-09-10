@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +35,14 @@ import com.ca.nbiapps.model.ModuleDependency;
  * @author Balaji N
  *
  */
-public class BinaryAuditGenerator extends ModulesValidator {
+public class BinaryAuditGenerator extends ModulesValidation {
 	private static final Logger logger = LoggerFactory.getLogger(BinaryAuditGenerator.class);
 	private static final String baseCommonJarPath = "common/v1.0";
 	private Set<ModuleDependency> commonJars = new LinkedHashSet<>();
 	private List<BinaryAudit> binaryAudits = new ArrayList<>();
 	private BigInteger buildNumber; 
 	private SiloName siloName = new SiloName();
-	
+	private GitOpertions gitOpertions;
 	/**
 	 * This model is used filter files for audit.
 	 * @param basePath
@@ -50,11 +51,13 @@ public class BinaryAuditGenerator extends ModulesValidator {
 	 * @throws XmlPullParserException 
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
+	 * @throws GitAPIException 
 	 */
-	BinaryAuditGenerator(String basePath, BigInteger buildNumber, String taskId, List<FileChanges> fileChanges) throws FileNotFoundException, IOException, XmlPullParserException {		
+	BinaryAuditGenerator(String basePath, BigInteger buildNumber, String taskId, List<FileChanges> fileChanges) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {		
 		super(basePath,taskId, fileChanges);
 		this.setBuildNumber(buildNumber);
 		createSiloName();
+		gitOpertions = new GitOpertions(getBasePath());
 		populateBinaryAuditInfo();
 	}
 	
@@ -124,7 +127,7 @@ public class BinaryAuditGenerator extends ModulesValidator {
 					 moduleData.getModuleArtifacts().add(moduleDependency);
 				} else if(MODIFIED.equals(moduleData.getPomAction())) {
 					//TODO: module pom changed.. compare and fill the change list.
-					PomContainer originalPomContainer = new PomContainer(getBaseBranchRootPomContent(moduleName+File.separator+"pom.xml"));
+					PomContainer originalPomContainer = new PomContainer(gitOpertions.getMasterBranchRootPomContent(moduleName+File.separator+"pom.xml"));
 					List<Dependency> addedModuleDependencies = originalPomContainer.getAddedDependencies(modulePomContainer);
 					List<Dependency> removedModuleDependencies = originalPomContainer.getRemovedDependencies(modulePomContainer);
 					

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import com.ca.nbiapps.business.layer.ModulesValidator;
+import com.ca.nbiapps.business.layer.ModulesValidation;
 import com.ca.nbiapps.business.layer.PomContainer;
 import com.ca.nbiapps.client.TriggerBuild;
 import com.ca.nbiapps.constants.BuildConstants;
@@ -180,7 +180,7 @@ public class BuildServiceImpl implements BuildService {
 				}
 			}
 			
-			ModulesValidator modulesValidator = new ModulesValidator(basePath, taskId, listOfFilesReq.getFileChangeList());	
+			ModulesValidation modulesValidator = new ModulesValidation(basePath, taskId, listOfFilesReq.getFileChangeList());	
 			ResponseBuilder responseBuilder = modulesValidator.sonarPropertyFilePresent();
 			if (!responseBuilder.isResult()) {
 				validationDetails.add(responseBuilder.getResultDesc());

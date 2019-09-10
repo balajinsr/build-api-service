@@ -12,10 +12,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
-
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +26,7 @@ import com.ca.nbiapps.model.ModuleData;
  * @author Balaji N
  *
  */
-public class BuildCommandGenerator extends ModulesValidator {
+public class BuildCommandGenerator extends ModulesValidation {
 	private static final Logger logger = LoggerFactory.getLogger(BuildCommandGenerator.class);
 	private Set<ModuleData> impactedModuleForCompile = new HashSet<>();
 	
@@ -39,8 +38,9 @@ public class BuildCommandGenerator extends ModulesValidator {
 	 * @throws XmlPullParserException 
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
+	 * @throws GitAPIException 
 	 */
-	BuildCommandGenerator(String basePath, String taskId, List<FileChanges> fileChanges) throws FileNotFoundException, IOException, XmlPullParserException {
+	BuildCommandGenerator(String basePath, String taskId, List<FileChanges> fileChanges) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
 		super(basePath, taskId, fileChanges);
 		
 		/**

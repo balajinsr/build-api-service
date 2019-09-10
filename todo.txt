@@ -9,9 +9,18 @@ validation:
 - stop building if previous module version jars is not deployed. against with different DT but not with same DT/case, by category of same module -{This is becuase module dependencies is missing if we allow}
 - first level module jars should not use in same level other module.  {it should go to common}
 - validation time. logging into db.. that is: impacted modules because of dependency changed. against each dependency against module list. - audit in addldetails column in build-audit.
--  
+- Complex: constraint on consolidation time - filter module by previous DT. Stop previous DT not deployed. Inform them to select previous DT also for consolidation. 
+- common DT should be ignored.
 
 bugs:
- - 
-
-- 
+=================||  
+=================||
+28*200=5600      ||
+       4000             ||
+                 ||  
+30*40= 1200      ||  
+                 ||
+8*800= 6400      || 
+=================||
+        13200    ||
+=================||

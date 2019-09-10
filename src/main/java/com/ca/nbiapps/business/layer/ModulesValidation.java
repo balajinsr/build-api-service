@@ -17,12 +17,7 @@ import java.util.Set;
 
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +31,8 @@ import com.ca.nbiapps.model.ResponseBuilder;
  *
  */
 
-public class ModulesValidator {
-	private static final Logger logger = LoggerFactory.getLogger(ModulesValidator.class);
+public class ModulesValidation {
+	private static final Logger logger = LoggerFactory.getLogger(ModulesValidation.class);
 	
 	public static final String ADDED = "A";
 	public static final String MODIFIED = "M";
@@ -49,7 +44,7 @@ public class ModulesValidator {
 	private Set<String> srcChangedModules = new HashSet<>();
 	
 	
-	
+
 	//validate: it may be removed in child pom or added in root pom but not used. we need to make sure clean in root pom while validating.
 	private List<Dependency> unUsedDependenciesInRootPom = new ArrayList<>();
 	
@@ -61,6 +56,7 @@ public class ModulesValidator {
 	private String siloName;
 	private String taskId;
 
+	private GitOpertions gitOpertions;
 	/**
 	 * This model is used filter module list for validate.
 	 * 
@@ -72,10 +68,12 @@ public class ModulesValidator {
 	 * @throws XmlPullParserException
 	 * @throws IOException
 	 * @throws FileNotFoundException
+	 * @throws GitAPIException 
 	 */
-	public ModulesValidator(String basePath, String taskId, List<FileChanges> fileChangeList) throws FileNotFoundException, IOException, XmlPullParserException {
+	public ModulesValidation(String basePath, String taskId, List<FileChanges> fileChangeList) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
 		this.basePath = basePath;
 		this.setTaskId(taskId);
+		gitOpertions = new GitOpertions(getBasePath());
 		for(FileChanges fileChanges : fileChangeList) {
 			processTheFiles(fileChanges.getChangeList(), fileChanges.getOperation());
 		}
@@ -86,8 +84,7 @@ public class ModulesValidator {
 		
 		
 		for (String relativeFilePath : relativeFilePaths) {
-			int index = relativeFilePath.indexOf("/");
-			
+			int index = relativeFilePath.indexOf("/");			
 			if (index == -1) {
 				/**
 				 * Parent pom changed, Added/modified in <modules> list but forgot to commit the module changes into git. 
@@ -100,7 +97,7 @@ public class ModulesValidator {
 					 logger.info("prepare module list for validation: " + relativeFilePath);
 					 PomContainer modifiedPomContainer = new PomContainer(basePath+File.separator+"pom.xml"); 
 					 if(MODIFIED.equals(operation)) {
-						 PomContainer originalPomContainer = new PomContainer(getBaseBranchRootPomContent("pom.xml")); 
+						 PomContainer originalPomContainer = new PomContainer(gitOpertions.getMasterBranchRootPomContent("pom.xml")); 
 						 changedModules = originalPomContainer.getRemovedModules(modifiedPomContainer);
 						 changedModules.addAll(originalPomContainer.getAddedModules(modifiedPomContainer));
 						 
@@ -167,6 +164,7 @@ public class ModulesValidator {
 	 */
 	private void populateModuleNames(String moduleDirName, boolean isSourceCodeChanged, String pomFileAction, String moduleAction) throws FileNotFoundException, IOException, XmlPullParserException {
 		File file = new File(basePath + "/" + moduleDirName);
+		
 		ModuleData moduleData = null;
 		if (file.exists() ) {			
 			if(uniqueAddedOrModifiedModulesMap.containsKey(moduleDirName)) {
@@ -193,7 +191,7 @@ public class ModulesValidator {
 				} else {
 					moduleData = new ModuleData();
 					moduleData.setModuleName(moduleDirName);
-					moduleData.setTwoLevelModule(childPomContainer.isTwoLevelModule());
+					moduleData.setTwoLevelModule(!childPomContainer.isTwoLevelModule()?moduleDirName.contains(File.separator):false);
 					moduleData.setModuleAction(moduleAction);
 					moduleData.setPomAction(pomFileAction);
 					moduleData.setSourceChanged(isSourceCodeChanged);
@@ -366,40 +364,6 @@ public class ModulesValidator {
 		return sonarProp;
 	}
 	
-	
-	public byte [] getBaseBranchRootPomContent(String pomFileRelativePath) throws IOException  {
-		if(isValidLocalRepository()) {
-			try (Git git = Git.open(new File(getBasePath()))) {
-				 ObjectId masterTreeId = git.getRepository().resolve("refs/heads/master^{tree}" );
-				 try (TreeWalk treeWalk = TreeWalk.forPath( git.getRepository(), pomFileRelativePath, masterTreeId)) {
-					 	ObjectId blobId = treeWalk.getObjectId(0);
-					    ObjectLoader objectLoader = loadObject(git, blobId );
-					    return objectLoader.getBytes(); 
-				 }
-			 }
-		} else {
-			throw new IOException("Not a valid git local repository - ["+getBasePath()+"]");
-		}
-	}
-	
-	private ObjectLoader loadObject(Git git, ObjectId objectId) throws IOException {
-	    try (ObjectReader objectReader = git.getRepository().newObjectReader()) {
-	    	return objectReader.open( objectId );
-	    }
-	  }
-	
-	private boolean isValidLocalRepository() {
-		boolean result;
-		try (FileRepository objDir = new FileRepository(new File(getBasePath()))) {
-			result = objDir.getObjectDatabase().exists();
-		} catch (IOException e) {
-			result = false;
-		}
-		return result;
-	}
-	
-	
-
 	private static ResponseBuilder sendResult(boolean result) {
 		return sendResult(result, "");
 	}
@@ -467,5 +431,15 @@ public class ModulesValidator {
 
 	public boolean isRootPomModified() {
 		return isRootPomModified;
+	}
+	
+
+	
+	public Set<String> getSrcChangedModules() {
+		return srcChangedModules;
+	}
+
+	public void setSrcChangedModules(Set<String> srcChangedModules) {
+		this.srcChangedModules = srcChangedModules;
 	}
 }
