@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -209,6 +210,9 @@ public class BuildServiceImpl implements BuildService {
 		} catch (XmlPullParserException xpe) {
 			validationDetails.add(" pom.xml parsing failed - " + xpe.getLocalizedMessage());
 			throw new BuildValidationException(validationDetails, xpe);
+		} catch (GitAPIException ge) {
+			validationDetails.add(" Git operation failed. - " + ge.getLocalizedMessage());
+			throw new BuildValidationException(validationDetails, ge);
 		}
 	}
 
