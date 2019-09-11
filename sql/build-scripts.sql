@@ -42,6 +42,7 @@ DROP TABLE IF EXISTS `pull_request_data`;
 CREATE TABLE `pull_request_data` (
   `pull_req_number` bigint(20) NOT NULL,
   `silo_id` bigint(3) NOT NULL,
+  `task_id` varchar(10) NOT NULL,
   `create_date_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `action` varchar(30) NOT NULL,
   `payload` text NOT NULL,

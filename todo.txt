@@ -13,10 +13,10 @@ validation:
 - common DT should be ignored.
 
 bugs:
-
 =======
 preBuildProcess() 
-    - pull
+    
+    - pull 
     - dryrun on merge?
     - validation
     - generate build command.
@@ -29,6 +29,29 @@ updateBuildStatus API.
 
 postBuildProcess()
    - impacted modules to build. create a report if any compilation issues. stop.
-   - generateartifacts
+   - generateArtifacts
    - upload
    - audit
+  
+ 
+ steps in jenkins:
+  
+ 1. buildProcess.sh
+ 
+    - rest call preBuildProcess() API.
+            - pull the changes from origin master. - sync
+            - preBuildValidate java method
+            
+    - rest call getBuildCommand() API.
+    
+    - trigger sonar analysis - shell method
+    
+    - rest call postBuildProcess() API
+            - generateArtifacts - java method
+             { - tx mode
+            - uploadArtifacts - java method
+            - audit to db.  - java method
+             }
+             
+    - postBuildAction in jenkin
+    - Trigger build notification email.      

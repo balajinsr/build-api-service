@@ -23,7 +23,7 @@ public class GitOperatorTest {
 	public void gitDiffTest() {
 		String repoPath = System.getenv("GIT_REPO_LOCATION");
 		try (GitOpertions gitOpertions = new GitOpertions(repoPath)) {
-			List<DiffEntry> diffEntry = gitOpertions.getDiff("refs/heads/master", "refs/heads/DT-123123123");
+			List<DiffEntry> diffEntry = gitOpertions.gitDiff("refs/heads/master", "refs/heads/DT-123123123");
 			for (DiffEntry entry : diffEntry) {
 				System.out.println(entry);
 				if (entry.getChangeType().equals(DiffEntry.ChangeType.ADD)) {

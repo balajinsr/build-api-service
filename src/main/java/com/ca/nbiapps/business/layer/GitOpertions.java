@@ -73,7 +73,7 @@ public class GitOpertions implements AutoCloseable {
 	}
 
 	
-	public List<DiffEntry> getDiff(String branchOneRef, String branchTwoRef) throws IOException, GitAPIException {
+	public List<DiffEntry> gitDiff(String branchOneRef, String branchTwoRef) throws IOException, GitAPIException {
 		Repository repo = git.getRepository();
 		AbstractTreeIterator oldTreeParser = prepareTreeParser(repo, branchOneRef);
         AbstractTreeIterator newTreeParser = prepareTreeParser(repo, branchTwoRef);
