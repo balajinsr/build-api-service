@@ -13,14 +13,22 @@ validation:
 - common DT should be ignored.
 
 bugs:
-=================||  
-=================||
-28*200=5600      ||
-       4000             ||
-                 ||  
-30*40= 1200      ||  
-                 ||
-8*800= 6400      || 
-=================||
-        13200    ||
-=================||
+
+=======
+preBuildProcess() 
+    - pull
+    - dryrun on merge?
+    - validation
+    - generate build command.
+    - update impacted modules if any. {product release details in build audit}. , 
+    
+    return.
+
+build - 
+updateBuildStatus API.
+
+postBuildProcess()
+   - impacted modules to build. create a report if any compilation issues. stop.
+   - generateartifacts
+   - upload
+   - audit

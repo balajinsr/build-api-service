@@ -2,6 +2,7 @@ package com.ca.nbiapps.business.layer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -21,11 +22,18 @@ import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,62 +43,75 @@ import org.slf4j.LoggerFactory;
  * @author Balaji
  *
  */
-public class GitOpertions {
+public class GitOpertions implements AutoCloseable {
 	private static final Logger logger = LoggerFactory.getLogger(GitOpertions.class);
 	private String localGitRepo;
+	private Git git;
 
 	public GitOpertions(String localGitRepo) throws IOException, GitAPIException {
 		this.localGitRepo = localGitRepo;
-		isValidLocalRepository();
+		this.git = Git.open(new File(localGitRepo));
 	}
 
-	public RevCommit commit(String commentMessage)
-			throws IOException, NoHeadException, NoMessageException, UnmergedPathsException,
-			ConcurrentRefUpdateException, WrongRepositoryStateException, AbortedByHookException, GitAPIException {
+	public RevCommit commit(String commentMessage) throws IOException, NoHeadException, NoMessageException, UnmergedPathsException, ConcurrentRefUpdateException, WrongRepositoryStateException, AbortedByHookException, GitAPIException {
 		logger.info("Going to commit " + commentMessage);
-		try (Git git = Git.open(new File(localGitRepo))) {
-			CommitCommand commitCommand = git.commit().setMessage(commentMessage);
-			return commitCommand.call();
-		}
+		CommitCommand commitCommand = git.commit().setMessage(commentMessage);
+		return commitCommand.call();
+		
 	}
 
 	public void addFileTOGit(String filePattern) throws NoFilepatternException, GitAPIException, IOException {
-		try (Git git = Git.open(new File(localGitRepo))) {
-			if (filePattern == null) {
-				filePattern = ".";
-			}
-			AddCommand addCommand = git.add().addFilepattern(filePattern);
-			addCommand.call();
+		if (filePattern == null) {
+			filePattern = ".";
 		}
+		AddCommand addCommand = git.add().addFilepattern(filePattern);
+		addCommand.call();	
 	}
 
 	public void checkoutDir(String branchName) throws IOException, RefAlreadyExistsException, RefNotFoundException,
 			InvalidRefNameException, CheckoutConflictException, GitAPIException {
-		try (Git git = Git.open(new File(localGitRepo))) {
-			git.checkout().call();
-		}
+		git.checkout().call();
 	}
 
-	public Set<String> getAddedFiles() throws IOException, NoWorkTreeException, GitAPIException {
-		try (Git git = Git.open(new File(localGitRepo))) {
-			Status status = git.status().call();
-			return status.getAdded();
-		}
+	public Set<String> getAddedFiles() throws IOException, NoWorkTreeException, GitAPIException {		
+		Status status = git.status().call();
+		return status.getAdded();		
 	}
 
 	public Set<String> getModifiedFiles() throws IOException, NoWorkTreeException, GitAPIException {
-		try (Git git = Git.open(new File(localGitRepo))) {
-			Status status = git.status().call();
-			return status.getModified();
-		}
+		Status status = git.status().call();
+		return status.getModified();
 	}
 
-	public Set<String> getDeletedFiles() throws IOException, NoWorkTreeException, GitAPIException {
-		try (Git git = Git.open(new File(localGitRepo))) {
-			Status status = git.status().call();
-			return status.getRemoved();
-		}
+	public Set<String> getDeletedFiles() throws IOException, NoWorkTreeException, GitAPIException {		
+		Status status = git.status().call();
+		return status.getRemoved();
 	}
+	
+	
+	public List<DiffEntry> getDiff(String branchOneRef, String branchTwoRef) throws IOException, GitAPIException {
+		Repository repo = git.getRepository();
+		AbstractTreeIterator oldTreeParser = prepareTreeParser(repo, branchOneRef);
+        AbstractTreeIterator newTreeParser = prepareTreeParser(repo, branchTwoRef);
+        List<DiffEntry> diff = git.diff().setShowNameAndStatusOnly(true).setOldTree(oldTreeParser).setNewTree(newTreeParser).call();  
+        return diff;      
+	}
+	
+	private AbstractTreeIterator prepareTreeParser(Repository repo, String ref) throws IOException {
+        Ref head = repo.exactRef(ref);
+        try (RevWalk walk = new RevWalk(repo)) {
+            RevCommit commit = walk.parseCommit(head.getObjectId());
+            RevTree tree = walk.parseTree(commit.getTree().getId());
+
+            CanonicalTreeParser treeParser = new CanonicalTreeParser();
+            try (ObjectReader reader = repo.newObjectReader()) {
+                treeParser.reset(reader, tree.getId());
+            } finally {
+            	walk.dispose();
+			}     
+            return treeParser;
+        }
+    }
 
 	/**
 	 * The path must either name a file or a directory exactly. All paths are always
@@ -139,14 +160,10 @@ public class GitOpertions {
 		}
 	}
 
-	private boolean isValidLocalRepository() throws IOException {
-		try (Git git = Git.open(new File(localGitRepo))) {
-			return true;
-		} catch(IOException e) {
-			logger.error("Error: "+e, e);
-			throw e;
+	@Override
+	public void close() throws Exception {
+		if(git != null) {
+			git.close();
 		}
-
 	}
-
 }
