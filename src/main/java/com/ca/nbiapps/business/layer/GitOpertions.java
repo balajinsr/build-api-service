@@ -23,7 +23,6 @@ import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -73,21 +72,6 @@ public class GitOpertions implements AutoCloseable {
 		git.checkout().call();
 	}
 
-	public Set<String> getAddedFiles() throws IOException, NoWorkTreeException, GitAPIException {		
-		Status status = git.status().call();
-		return status.getAdded();		
-	}
-
-	public Set<String> getModifiedFiles() throws IOException, NoWorkTreeException, GitAPIException {
-		Status status = git.status().call();
-		return status.getModified();
-	}
-
-	public Set<String> getDeletedFiles() throws IOException, NoWorkTreeException, GitAPIException {		
-		Status status = git.status().call();
-		return status.getRemoved();
-	}
-	
 	
 	public List<DiffEntry> getDiff(String branchOneRef, String branchTwoRef) throws IOException, GitAPIException {
 		Repository repo = git.getRepository();
