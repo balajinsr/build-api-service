@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.AbortedByHookException;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
@@ -44,11 +42,9 @@ import org.slf4j.LoggerFactory;
  */
 public class GitOpertions implements AutoCloseable {
 	private static final Logger logger = LoggerFactory.getLogger(GitOpertions.class);
-	private String localGitRepo;
 	private Git git;
 
-	public GitOpertions(String localGitRepo) throws IOException, GitAPIException {
-		this.localGitRepo = localGitRepo;
+	public GitOpertions(String localGitRepo) throws IOException, GitAPIException {		
 		this.git = Git.open(new File(localGitRepo));
 	}
 
@@ -106,39 +102,22 @@ public class GitOpertions implements AutoCloseable {
 	 * @throws Exception
 	 */
 	public void reset(String path) throws Exception {
-		if (localGitRepo != null) {
-			try (Git git = Git.open(new File(localGitRepo))) {
-				Set<String> files = new TreeSet<>();
-				Status status = git.status().addPath(path + "/").call();
-
-				files.addAll(status.getUntrackedFolders());
-				files.addAll(status.getUntracked());
-				files.addAll(status.getModified());
-				files.addAll(status.getRemoved());
-				files.addAll(status.getUncommittedChanges());
-
-				logger.info("Git Status [git status " + path + "]: " + files);
-				Set<String> clearedList = git.clean().setCleanDirectories(true).setPaths(files).setForce(true).call();
-
-				for (String item : clearedList) {
-					logger.info("Following files reset from local repo:" + item);
-				}
-			}
+		Set<String> clearedList = git.clean().setCleanDirectories(true).setForce(true).call();
+		for (String item : clearedList) {
+			logger.info("Following files reset from local repo:" + item);
 		}
 	}
 
 	public byte[] getMasterBranchRootPomContent(String path) throws IOException {
-		try (Git git = Git.open(new File(localGitRepo))) {
-			ObjectId masterTreeId = git.getRepository().resolve("refs/heads/master^{tree}");
-			try (TreeWalk treeWalk = TreeWalk.forPath(git.getRepository(), path, masterTreeId)) {
-				ObjectId blobId = treeWalk.getObjectId(0);
-				ObjectLoader objectLoader = loadObject(git, blobId);
-				return objectLoader.getBytes();
-			}
+		ObjectId masterTreeId = git.getRepository().resolve("refs/heads/master^{tree}");
+		try (TreeWalk treeWalk = TreeWalk.forPath(git.getRepository(), path, masterTreeId)) {
+			ObjectId blobId = treeWalk.getObjectId(0);
+			ObjectLoader objectLoader = loadObject(blobId);
+			return objectLoader.getBytes();
 		}
 	}
 
-	private ObjectLoader loadObject(Git git, ObjectId objectId) throws IOException {
+	private ObjectLoader loadObject(ObjectId objectId) throws IOException {
 		try (ObjectReader objectReader = git.getRepository().newObjectReader()) {
 			return objectReader.open(objectId);
 		}
