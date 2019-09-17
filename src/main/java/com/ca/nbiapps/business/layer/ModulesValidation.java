@@ -18,10 +18,9 @@ import java.util.Set;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.ca.nbiapps.model.FileChanges;
 import com.ca.nbiapps.model.ModuleData;
 import com.ca.nbiapps.model.ResponseBuilder;
 
@@ -70,20 +69,27 @@ public class ModulesValidation {
 	 * @throws FileNotFoundException
 	 * @throws GitAPIException 
 	 */
-	public ModulesValidation(String basePath, String taskId, List<FileChanges> fileChangeList) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
+	public ModulesValidation(String basePath, String taskId, List<DiffEntry> diffEntries) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
 		this.basePath = basePath;
 		this.setTaskId(taskId);
 		gitOpertions = new GitOpertions(getBasePath());
-		for(FileChanges fileChanges : fileChangeList) {
-			processTheFiles(fileChanges.getChangeList(), fileChanges.getOperation());
+		String relativeFilePath = null;
+		String operation = null;
+		for (DiffEntry entry : diffEntries) {	
+			operation = entry.getChangeType().name();
+			if (entry.getChangeType().equals(DiffEntry.ChangeType.ADD) || entry.getChangeType().equals(DiffEntry.ChangeType.MODIFY)) {
+				relativeFilePath = entry.getNewPath();
+			} else if (entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
+				relativeFilePath = entry.getOldPath(); 
+			} 
+			processTheFiles(relativeFilePath, operation);
 		}
+		
+		
 	}
 	
-	protected void processTheFiles(List<String> relativeFilePaths, String operation) throws FileNotFoundException, IOException, XmlPullParserException {
+	protected void processTheFiles(String relativeFilePath, String operation) throws FileNotFoundException, IOException, XmlPullParserException {
 		this.siloName = basePath.substring(basePath.lastIndexOf("/") + 1);
-		
-		
-		for (String relativeFilePath : relativeFilePaths) {
 			int index = relativeFilePath.indexOf("/");			
 			if (index == -1) {
 				/**
@@ -130,7 +136,7 @@ public class ModulesValidation {
 				 } else {
 					 logger.info("Ignore the file for module validate: " + relativeFilePath);
 				 }
-				continue;
+				
 			} 
 			String moduleDir = relativeFilePath.substring(0, index);
 			if(!"SILO".equals(moduleDir)) {
@@ -139,7 +145,6 @@ public class ModulesValidation {
 				String moduleAction = getModuleAction(relativeFilePath, moduleDir, operation);
 				populateModuleNames(moduleDir, isSourceCodeChange, isPomFileAction, moduleAction);
 			}
-		}
 	}
 	
 	public String getModuleAction(String relativeFilePath, String moduleDir, String operation) {

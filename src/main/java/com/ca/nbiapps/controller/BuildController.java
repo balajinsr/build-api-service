@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -26,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ca.nbiapps.entities.BuildAudit;
 import com.ca.nbiapps.entities.BuildAuditReq;
 import com.ca.nbiapps.entities.SiloNameReq;
-import com.ca.nbiapps.model.ListOfBuildFilesReq;
 import com.ca.nbiapps.service.BuildService;
 import com.ca.nbiapps.util.CoreUtils;
 
@@ -71,11 +71,24 @@ public class BuildController {
 		}
 	}
 	
-	@PostMapping(path = "/saveBuildAudit")
-	public ResponseEntity<Object> saveBuildAudit(HttpServletRequest request, @RequestBody BuildAuditReq buildAuditReq)  {
-		BuildAudit buildAudit = buildService.saveBuildAudit(buildAuditReq);
-		logger.info("BuildAuditData Saved to DB: "+buildAudit.toString());
+	@PostMapping(path = "/preBuildProcess")
+	public ResponseEntity<Object> preBuildProcess(@RequestBody BuildAuditReq buildAuditReq)  {
+		buildService.preBuildProcess(buildAuditReq);
 		return ResponseEntity.ok().build();
+	}
+	
+	@GetMapping(path = "/generateBuildCommand")
+	public Object generateBuildCommand()  {
+		//TODO:
+		return ResponseEntity.ok().body("{\"name\":\"balaji\"}");
+	}
+	
+	
+	@PostMapping(path = "/postBuildProcess")
+	public Object postBuildProcess(HttpServletRequest request, @RequestBody BuildAuditReq buildAuditReq)  {
+		//TODO:
+		buildService.postBuildProcess(buildAuditReq);
+		return ResponseEntity.ok().body(null);
 	}
 	
 	@PostMapping(path = "/updateBuildAudit")
@@ -85,27 +98,10 @@ public class BuildController {
 		return ResponseEntity.ok().build();
 	}
 	
-	@PostMapping(path = "/validatePullRequest")
-	public ResponseEntity<Object> validatePullRequest(HttpServletRequest request, @RequestBody BuildAuditReq buildAuditReq)  {
-		buildService.validatePullRequest(buildAuditReq);
-		return ResponseEntity.ok().build();
-	}
 	
-	@PostMapping(path = "/preBuildValidation")
-	public ResponseEntity<Object> preBuildValidtion(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
-		buildService.preBuildValidtion(listOfFilesReq);
-		return ResponseEntity.ok().build();
-	}
-	
-	
-	@PostMapping(path = "/generateBuildCommand")
-	public Object generateBuildCommand(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
-		//TODO:
-		return ResponseEntity.ok().body(null);
-	}
 	
 	@PostMapping(path = "/releaseBuildArtifacts")
-	public Object processBuildArtifacts(HttpServletRequest request, @RequestBody ListOfBuildFilesReq listOfFilesReq)  {
+	public Object processBuildArtifacts(HttpServletRequest request, @RequestBody BuildAudit buildAudit)  {
 		//TODO:
 		return ResponseEntity.ok().body(null);
 	}

@@ -47,6 +47,31 @@ public class FileProbeUtil {
 		return sendResult(true);
 	}
 	
+	/**
+	 * Checks whether the extensions are in list. 
+	 * @param pullContentFiles : list of files with absolute file paths
+	 * @return
+	 * @throws IOException
+	 */
+	public ResponseBuilder areFileExtensionsCorrect(String extensionsAllowed, String relativeFilePath) throws IOException{
+		if (relativeFilePath == null){
+			return sendResult(true,"No files present");
+		} else{
+			
+			// skip if its a directory
+			String absFilePath = basePath+File.separator+relativeFilePath;
+			if (!(new File(absFilePath)).isDirectory()) {
+				if(StringUtils.containsWhitespace(absFilePath) ) {
+					return sendResult(false,"File Name should not contains space. [ "+absFilePath+" ]. NOTE: Not in use files should be removed.");
+				} else if(!extensionsAllowed.contains(getExtension(absFilePath))){
+					return sendResult(false,"Extension used in [ "+absFilePath+" ] is not in Allowed List { "+extensionsAllowed+" }");
+				}
+			}
+			
+		}
+		return sendResult(true);
+	}
+	
 
 	
 	/**

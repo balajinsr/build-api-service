@@ -31,6 +31,9 @@ public class PullRequestData implements Serializable {
 	@XmlElement(name="number")
 	private BigInteger pullReqNumber;
 
+	@Column(nullable=false, length=10)
+	private String taskId;
+	
 	@Column(nullable=false, length=30)
 	private String action;
 
@@ -89,9 +92,17 @@ public class PullRequestData implements Serializable {
 		this.siloId = siloId;
 	}
 
+	public String getTaskId() {
+		return taskId;
+	}
+
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
 	@Override
 	public String toString() {
-		return "PullRequestData [pullReqNumber=" + pullReqNumber + ", action=" + action + ", createDateTime=" + createDateTime + ", pullRequest=" + pullRequest + ", siloId="
+		return "PullRequestData [pullReqNumber=" + pullReqNumber + ", taskId=" + taskId +", action=" + action + ", createDateTime=" + createDateTime + ", pullRequest=" + pullRequest + ", siloId="
 				+ siloId + "]";
 	}
 }

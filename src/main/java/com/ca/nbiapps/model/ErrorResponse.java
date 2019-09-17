@@ -7,17 +7,19 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import javax.xml.bind.annotation.XmlRootElement;
 /**
  * @author Balaji N
  *
  */
 @JsonSerialize
 @JsonInclude(Include.NON_NULL)
-@XmlRootElement(name = "error")
+@JsonRootName(value = "error")
 public class ErrorResponse implements Serializable {
 	
 	private static final long serialVersionUID = 1L;

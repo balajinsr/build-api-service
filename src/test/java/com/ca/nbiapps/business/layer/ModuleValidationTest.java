@@ -8,6 +8,7 @@ import java.util.Set;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import com.ca.nbiapps.model.FileChanges;
 import com.ca.nbiapps.model.ModuleData;
 
 /**
@@ -31,15 +30,16 @@ public class ModuleValidationTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(ModuleValidationTest.class);
 
-	private List<FileChanges> getAddFiles() {
-		List<FileChanges> fileChangeList = new ArrayList<>();
+	private List<DiffEntry> getAddFiles() {
+		List<DiffEntry> diffEntries = new ArrayList<>();
 
+		DiffEntry diffEntry = DiffEntry;
 		List<String> addedFiles = new ArrayList<>();
 		addedFiles.add("CAPONE/pom.xml");
 		addedFiles.add("CAPONE/src/main/java/com/ca/nbiapps/MainClass.java");
 		addedFiles.add("pom.xml");
 
-		FileChanges fileChanges = new FileChanges();
+		FileChanges fileChanges = new FileChangesS();
 		fileChanges.setOperation("A");
 		fileChanges.setChangeList(addedFiles);
 
@@ -47,14 +47,14 @@ public class ModuleValidationTest {
 		return fileChangeList;
 	}
 
-	private List<FileChanges> getModifiedFiles() {
-		List<FileChanges> fileChangeList = new ArrayList<>();
+	private List<FileChangesS> getModifiedFiles() {
+		List<FileChangesS> fileChangeList = new ArrayList<>();
 
 		List<String> files = new ArrayList<>();
 		files.add("CAPONE/pom.xml");
 		files.add("CAPONE/src/main/java/com/ca/nbiapps/MainClass.java");
 
-		FileChanges fileChanges = new FileChanges();
+		FileChangesS fileChanges = new FileChanges();
 		fileChanges.setOperation("M");
 		fileChanges.setChangeList(files);
 
@@ -62,14 +62,14 @@ public class ModuleValidationTest {
 		return fileChangeList;
 	}
 
-	private List<FileChanges> getAddedRoomPomFile() {
-		List<FileChanges> fileChangeList = new ArrayList<>();
+	private List<FileChangesS> getAddedRoomPomFile() {
+		List<FileChangesS> fileChangeList = new ArrayList<>();
 
 		List<String> addedFiles = new ArrayList<>();
 
 		addedFiles.add("pom.xml");
 
-		FileChanges fileChanges = new FileChanges();
+		FileChangesS fileChanges = new FileChangesS();
 		fileChanges.setOperation("A");
 		fileChanges.setChangeList(addedFiles);
 
@@ -78,13 +78,13 @@ public class ModuleValidationTest {
 	}
 
 	private List<FileChanges> getAddedModuleFile() {
-		List<FileChanges> fileChangeList = new ArrayList<>();
+		List<FileChangesS> fileChangeList = new ArrayList<>();
 
 		List<String> addedFiles = new ArrayList<>();
 		addedFiles.add("CAPONE/pom.xml");
 		addedFiles.add("CAPONE/src/main/java/com/ca/nbiapps/MainClass.java");
 
-		FileChanges fileChanges = new FileChanges();
+		FileChanges fileChanges = new FileChangesS();
 		fileChanges.setOperation("A");
 		fileChanges.setChangeList(addedFiles);
 

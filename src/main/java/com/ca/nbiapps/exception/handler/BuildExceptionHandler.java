@@ -3,6 +3,7 @@
  */
 package com.ca.nbiapps.exception.handler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.ca.nbiapps.exceptions.BuildValidationException;
-import com.ca.nbiapps.exceptions.JSONException;
+import com.ca.nbiapps.exceptions.BuildSystemException;
 import com.ca.nbiapps.exceptions.PullRequestRejectException;
 import com.ca.nbiapps.model.ErrorResponse;
 
@@ -45,7 +46,7 @@ public class BuildExceptionHandler extends ResponseEntityExceptionHandler {
 		return handleExceptionInternal(ex, error, new HttpHeaders(), HttpStatus.NOT_ACCEPTABLE, request);
 	}
 
-	@ExceptionHandler({ Exception.class, JSONException.class, RuntimeException.class })
+	@ExceptionHandler({ Exception.class, RuntimeException.class, BuildSystemException.class})
 	public final ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) {
 		List<String> details = new ArrayList<>();
 		details.add(ex.getLocalizedMessage());

@@ -19,6 +19,7 @@ import java.util.Set;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,6 @@ import com.ca.nbiapps.entities.BinaryAudit;
 import com.ca.nbiapps.entities.ModuleName;
 import com.ca.nbiapps.entities.SiloName;
 import com.ca.nbiapps.entities.SiloNameReq;
-import com.ca.nbiapps.model.FileChanges;
 import com.ca.nbiapps.model.ModuleData;
 import com.ca.nbiapps.model.ModuleDependency;
 
@@ -53,8 +53,8 @@ public class BinaryAuditGenerator extends ModulesValidation {
 	 * @throws FileNotFoundException 
 	 * @throws GitAPIException 
 	 */
-	BinaryAuditGenerator(String basePath, BigInteger buildNumber, String taskId, List<FileChanges> fileChanges) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {		
-		super(basePath,taskId, fileChanges);
+	BinaryAuditGenerator(String basePath, BigInteger buildNumber, String taskId, List<DiffEntry> diffEntries) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {		
+		super(basePath,taskId, diffEntries);
 		this.setBuildNumber(buildNumber);
 		createSiloName();
 		gitOpertions = new GitOpertions(getBasePath());

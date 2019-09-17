@@ -3,14 +3,15 @@
  */
 package com.ca.nbiapps.service.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -20,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import com.ca.nbiapps.business.layer.GitOpertions;
 import com.ca.nbiapps.business.layer.ModulesValidation;
-import com.ca.nbiapps.business.layer.PomContainer;
 import com.ca.nbiapps.client.TriggerBuild;
 import com.ca.nbiapps.constants.BuildConstants;
 import com.ca.nbiapps.constants.OpenPullFileStatusConstants;
@@ -31,10 +32,10 @@ import com.ca.nbiapps.dao.SiloNameDAO;
 import com.ca.nbiapps.entities.BuildAudit;
 import com.ca.nbiapps.entities.BuildAuditReq;
 import com.ca.nbiapps.entities.PullRequestData;
+import com.ca.nbiapps.entities.SiloName;
+import com.ca.nbiapps.exceptions.BuildSystemException;
 import com.ca.nbiapps.exceptions.BuildValidationException;
 import com.ca.nbiapps.model.BuildAuditAddlData;
-import com.ca.nbiapps.model.FileChanges;
-import com.ca.nbiapps.model.ListOfBuildFilesReq;
 import com.ca.nbiapps.model.PullRequest;
 import com.ca.nbiapps.model.PullRequestEvent;
 import com.ca.nbiapps.model.ResponseBuilder;
@@ -65,6 +66,9 @@ public class BuildServiceImpl implements BuildService {
 	
 	@Value("${spring.allowed.filelist}")
 	private String allowedFileList;
+	
+	@Value("${spring.build.workspace}")
+	private String workspace;
 
 	@Override
 	public void processPullRequest(String payload) {
@@ -84,9 +88,46 @@ public class BuildServiceImpl implements BuildService {
 		paramsMap.add("TASK_ID", "" + taskId);
 		triggerBuild.jenkinsRemoteAPIBuildWithParameters(jobName, paramsMap);
 	}
-
+	
 	@Override
-	public BuildAudit saveBuildAudit(BuildAuditReq buildAuditReq) {
+	public void preBuildProcess(BuildAuditReq buildAuditReq) {
+		PullRequestData pullReqData = pullRequestDataDAO.findByPullReqNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getSiloId());
+		String taskId = pullReqData.getPullRequest().getTitle().trim();
+		// pullGitChanges(pullReqData); - do it later. right work with shell script.
+			
+		List<DiffEntry> diffEntry = null;
+		try {
+			diffEntry = getDiffEntries(pullReqData);
+			doBuildValidation(taskId, diffEntry);
+		}  catch (IOException | GitAPIException e) {		
+			throw new BuildSystemException(e);
+		} 
+	}
+
+	private List<DiffEntry> getDiffEntries(PullRequestData pullReqData) throws GitAPIException, IOException {
+		String taskId = pullReqData.getPullRequest().getTitle().trim();
+		SiloName siloName = siloNameDAO.findById(pullReqData.getSiloId()).get();
+		String localGitRepo = workspace+File.separator+siloName.getSiloNameReq().getSiloName();
+		List<DiffEntry> diffEntry = null;
+		try(GitOpertions op = new GitOpertions(localGitRepo)) {
+			diffEntry = op.gitDiff("refs/heads/master", "refs/heads/"+taskId);
+		} 
+		return diffEntry;
+	}
+
+	// not used - we will plugin it later.
+	private void pullGitChanges(PullRequestData pullReqData) throws IOException, GitAPIException {
+		SiloName siloName = siloNameDAO.findById(pullReqData.getSiloId()).get();
+		String localGitRepo = workspace+File.separator+siloName.getSiloNameReq().getSiloName();
+		String taskBranchName = pullReqData.getTaskId();
+		GitOpertions gitOpertions = new GitOpertions(localGitRepo);
+		gitOpertions.checkoutDir("master");
+		gitOpertions.gitPull("origin", "master");
+		gitOpertions.fetch(taskBranchName);
+		gitOpertions.checkoutDir(taskBranchName);
+	}
+
+	private BuildAudit saveBuildAudit(BuildAuditReq buildAuditReq) {
 		BuildAudit buildAudit = new BuildAudit();
 		buildAudit.setBuildAuditReq(buildAuditReq);
 		buildAudit.setStatusCode(BigInteger.valueOf(BuildConstants.BUILD_FAILED.getStatus()));
@@ -111,8 +152,8 @@ public class BuildServiceImpl implements BuildService {
 		}
 	}
 
-	@Override
-	public void validatePullRequest(BuildAuditReq buildAuditReq) {
+
+	private void validatePullRequest(BuildAuditReq buildAuditReq) {
 		PullRequestData pullReqData = pullRequestDataDAO.findByPullReqNumberAndSiloId(buildAuditReq.getPullReqNumber(), buildAuditReq.getSiloId());
 		PullRequest pullReq = pullReqData.getPullRequest();
 		String taskIdFromRef = pullReq.getHead().getRef();
@@ -137,31 +178,38 @@ public class BuildServiceImpl implements BuildService {
 	 * MODIFY 1. Duplicate Files are not present a) java files should not have
 	 * the same package.
 	 * @throws IOException 
+	 * @throws GitAPIException 
 	 * @throws XmlPullParserException 
 	 */
-	@Override
-	public void preBuildValidtion(ListOfBuildFilesReq listOfFilesReq)  {
-		String taskId = listOfFilesReq.getTaskId();
+	private void doBuildValidation(String taskId, List<DiffEntry> diffEntry) throws IOException, GitAPIException  {
 		String basePath = System.getProperty("user.dir");
 		List<String> validationDetails = new ArrayList<>();
 		try {
-			for (FileChanges fileChange : listOfFilesReq.getFileChangeList()) {
-				String operation = fileChange.getOperation();
-				List<String> relativeFilePaths = fileChange.getChangeList();
+			String relativeFilePath = null;
+			String operation = null;
+			for (DiffEntry entry : diffEntry) {	
+				operation = entry.getChangeType().name();
+				if (entry.getChangeType().equals(DiffEntry.ChangeType.ADD) || entry.getChangeType().equals(DiffEntry.ChangeType.MODIFY)) {
+					relativeFilePath = entry.getNewPath();
+				} else if (entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
+					relativeFilePath = entry.getOldPath(); 
+				} 
+			}
+			
+		
 				boolean isAdded = operation.equals(OpenPullFileStatusConstants.ADD.getStrAction());
 				boolean isModified = operation.equals(OpenPullFileStatusConstants.MODIFY.getStrAction());
-				logger.info("[" + taskId + "] - Operation: [" + operation + "] Pre file validation Check to be invoked on Set " + fileChange.getChangeList().toString());
 				
 				FileProbeUtil fileProbe = new FileProbeUtil(basePath);
 				if (isAdded) {
-					ResponseBuilder areFileExtensionsCorrect = fileProbe.areFileExtensionsCorrect(allowedFileList, relativeFilePaths);
+					ResponseBuilder areFileExtensionsCorrect = fileProbe.areFileExtensionsCorrect(allowedFileList, relativeFilePath);
 					if (!areFileExtensionsCorrect.isResult()) {
 						validationDetails.add(areFileExtensionsCorrect.getResultDesc());
 					}
 				}
 				
 				if (isAdded || isModified) {
-					for (String relativeFilePath : relativeFilePaths) {
+					
 						if (relativeFilePath.endsWith("pom.xml")) {
 							logger.info("relativeFilePath: " + relativeFilePath);
 							ResponseBuilder isPomCorrect = fileProbe.isPomCorrect(relativeFilePath);
@@ -177,11 +225,11 @@ public class BuildServiceImpl implements BuildService {
 						} else {
 							logger.warn("[" + taskId + "] unhandled file operation [ " + operation + " ] ignored for validation");
 						}
-					}
-				}
+					
+				
 			}
 			
-			ModulesValidation modulesValidator = new ModulesValidation(basePath, taskId, listOfFilesReq.getFileChangeList());	
+			ModulesValidation modulesValidator = new ModulesValidation(basePath, taskId, diffEntry);	
 			ResponseBuilder responseBuilder = modulesValidator.sonarPropertyFilePresent();
 			if (!responseBuilder.isResult()) {
 				validationDetails.add(responseBuilder.getResultDesc());
@@ -201,18 +249,10 @@ public class BuildServiceImpl implements BuildService {
 			if (!responseBuilder.isResult()) {
 				validationDetails.add(responseBuilder.getResultDesc());
 			}
-	
 			//TODO: module version check increment.
-		} catch (IOException ioe) {
-			validationDetails.add("File Not found error : " + ioe.getLocalizedMessage());
-			validationDetails.add("IOException : "+ioe);
-			throw new BuildValidationException(validationDetails, ioe);
-		} catch (XmlPullParserException xpe) {
+		} catch(XmlPullParserException xpe) {
 			validationDetails.add(" pom.xml parsing failed - " + xpe.getLocalizedMessage());
 			throw new BuildValidationException(validationDetails, xpe);
-		} catch (GitAPIException ge) {
-			validationDetails.add(" Git operation failed. - " + ge.getLocalizedMessage());
-			throw new BuildValidationException(validationDetails, ge);
 		}
 	}
 
@@ -229,27 +269,6 @@ public class BuildServiceImpl implements BuildService {
 		buildAuditAddlData.setCommitterEmail("");
 		buildAuditAddlData.setCommitterFullName(""); // TODO:
 		return buildAuditAddlData;
-	}
-
-
-	@Deprecated //remove this method after catch handle in main validate method -- THIS NEW METHOD
-	private String getModuleName(String basePath, String relativePath, List<String> validationDetails) {
-		String moduleDir = relativePath.substring(0, relativePath.indexOf("/"));
-		try {
-			PomContainer pomContainer = new PomContainer(basePath + "/" + moduleDir + "/pom.xml");
-			if (pomContainer.isTwoLevelModule()) {
-				int indexOfTwoLevelModuleIndex = StringUtils.ordinalIndexOf(relativePath, "/", 1);
-				String childModuleDirName = relativePath.substring(indexOfTwoLevelModuleIndex + 1, StringUtils.ordinalIndexOf(relativePath, "/", 2));
-				return moduleDir + "/" + childModuleDirName;
-			}
-		} catch (IOException ioe) {
-			validationDetails.add("File not found - [" + moduleDir + "/pom.xml]");
-			throw new BuildValidationException(validationDetails, ioe);
-		} catch (XmlPullParserException xpe) {
-			validationDetails.add("[" + moduleDir + "/pom.xml] parsing failed - " + xpe.getLocalizedMessage());
-			throw new BuildValidationException(validationDetails, xpe);
-		}
-		return moduleDir;
 	}
 
 	private ResponseBuilder prechecks(String taskIdFromRef, String taskId, boolean fork, boolean isPrivate) {
@@ -269,5 +288,12 @@ public class BuildServiceImpl implements BuildService {
 			}
 		}
 		return new ResponseBuilder(true, "");
+	}
+
+	@Override
+	public void postBuildProcess(BuildAuditReq buildAuditReq) {
+		//generateArtifacts method.
+		//uploadArtifacts method.
+		//audit to DB.
 	}
 }

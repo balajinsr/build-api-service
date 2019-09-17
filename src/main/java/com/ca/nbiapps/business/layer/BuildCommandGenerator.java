@@ -15,10 +15,9 @@ import java.util.Set;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.ca.nbiapps.model.FileChanges;
 import com.ca.nbiapps.model.ModuleData;
 
 
@@ -40,8 +39,8 @@ public class BuildCommandGenerator extends ModulesValidation {
 	 * @throws FileNotFoundException 
 	 * @throws GitAPIException 
 	 */
-	BuildCommandGenerator(String basePath, String taskId, List<FileChanges> fileChanges) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
-		super(basePath, taskId, fileChanges);
+	BuildCommandGenerator(String basePath, String taskId, List<DiffEntry> diffEntry) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
+		super(basePath, taskId, diffEntry);
 		
 		/**
 		 * We are only preparing root pom impacted module list for buildcommand. Its basically loop through complete multlevel project.
