@@ -5,6 +5,7 @@ package com.ca.nbiapps.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -78,17 +79,16 @@ public class BuildController {
 	}
 	
 	@GetMapping(path = "/generateBuildCommand")
-	public Object generateBuildCommand()  {
-		//TODO:
-		return ResponseEntity.ok().body("{\"name\":\"balaji\"}");
+	public Object generateBuildCommand(@RequestBody BuildAuditReq buildAuditReq)  {
+		Map<String,String> buildCommand = buildService.generateBuildCommand(buildAuditReq);
+		return ResponseEntity.ok().body(buildCommand);
 	}
 	
 	
 	@PostMapping(path = "/postBuildProcess")
 	public Object postBuildProcess(HttpServletRequest request, @RequestBody BuildAuditReq buildAuditReq)  {
-		//TODO:
-		buildService.postBuildProcess(buildAuditReq);
-		return ResponseEntity.ok().body(null);
+		Map<String,String> response = buildService.postBuildProcess(buildAuditReq);
+		return ResponseEntity.ok().body(response);
 	}
 	
 	@PostMapping(path = "/updateBuildAudit")

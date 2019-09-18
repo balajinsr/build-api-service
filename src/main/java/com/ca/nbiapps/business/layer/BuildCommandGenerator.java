@@ -39,7 +39,7 @@ public class BuildCommandGenerator extends ModulesValidation {
 	 * @throws FileNotFoundException 
 	 * @throws GitAPIException 
 	 */
-	BuildCommandGenerator(String basePath, String taskId, List<DiffEntry> diffEntry) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
+	public BuildCommandGenerator(String basePath, String taskId, List<DiffEntry> diffEntry) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {
 		super(basePath, taskId, diffEntry);
 		
 		/**

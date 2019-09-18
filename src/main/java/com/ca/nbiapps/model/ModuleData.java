@@ -15,12 +15,10 @@ public class ModuleData {
 	private String moduleName;
 	private String moduleAction;
 	
-	
 	// module artifacts as list - both added and deleted
     private List<ModuleDependency> moduleArtifacts = new ArrayList<>();
     private List<ModuleDependency> moduleDependencies = new ArrayList<>();
-    
-	
+   
 	// module pom action with added or modified
 	private boolean twoLevelModule;
 	private String pomAction;
@@ -68,11 +66,6 @@ public class ModuleData {
 		return true;
 	}
 
-	@Override
-	public String toString() {
-		return "ModuleData [moduleName=" + moduleName + ", twoLevelModule=" + twoLevelModule + "]";
-	}
-
 	public String getModuleAction() {
 		return moduleAction;
 	}
@@ -111,5 +104,11 @@ public class ModuleData {
 
 	public void setModuleDependencies(List<ModuleDependency> moduleDependencies) {
 		this.moduleDependencies = moduleDependencies;
+	}
+
+	@Override
+	public String toString() {
+		return "ModuleData [moduleName=" + moduleName + ", moduleAction=" + moduleAction + ", moduleArtifacts=" + moduleArtifacts + ", moduleDependencies="
+				+ moduleDependencies + ", twoLevelModule=" + twoLevelModule + ", pomAction=" + pomAction + ", isSourceChanged=" + isSourceChanged + "]";
 	}
 }

@@ -30,8 +30,8 @@ public class AdminController {
 	@ResponseBody
 	public ResponseEntity<Object> hello(@RequestBody SiloNameReq siloNameReq) {
 		logger.info("Hello Admin- API start");
-		adminService.hello(siloNameReq);
-		
+		//adminService.hello(siloNameReq);
+		System.out.print("Hello:::"+siloNameReq.getId());
 		return ResponseEntity.ok().body(siloNameReq);
 	}
 	

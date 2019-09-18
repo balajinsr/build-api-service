@@ -14,6 +14,7 @@ public class ModuleDependency extends Dependency {
 	private String filePath;
 	private String md5Value;
 	private String action;
+	
 	public String getFilePath() {
 		return filePath;
 	}
@@ -34,5 +35,9 @@ public class ModuleDependency extends Dependency {
 	}
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	@Override
+	public String toString() {
+		return "ModuleDependency [filePath=" + filePath + ", md5Value=" + md5Value + ", action=" + action + "]";
 	}
 }

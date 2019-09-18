@@ -21,6 +21,15 @@
 		<downloadJavadocs>true</downloadJavadocs>
 		<junit.platform.launcher>1.4.1</junit.platform.launcher>
 	</properties>
+	
+	<!-- added for artifactory client dependency -->
+	<repositories>
+		<repository>
+			<id>itc-dsdc.ca.com</id>
+			<name>Snapshot and Release Repository</name>
+			<url>http://itc-dsdc.ca.com/artifactory/maven-repo</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 
@@ -107,6 +116,18 @@
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit.junit</artifactId>
 			<version>5.3.0.201903130848-r</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.jfrog.artifactory.client</groupId>
+		    <artifactId>artifactory-java-client-services</artifactId>
+		    <version>2.8.5</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-compress</artifactId>
+		    <version>1.1</version>
 		</dependency>
 		
 		<dependency>

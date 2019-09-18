@@ -24,11 +24,11 @@ postBuildProcess
 
 preBuildProcess() {
    pullGitchanges
-   curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "siloId":${siloId}, "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'"}' --silent ${buildServiceURL}/preBuildProcess)| {
+   curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "siloId":"'"${siloId}"'", "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'"}' --silent ${buildServiceURL}/preBuildProcess)| {
      read body
      read code
      
-     if [[ $code != '201' ]]
+     if [ $code -ne 200 ]
      then
         errorMsg=$(echo ${body}|jq -r '.error.message')
    		echo "${errorMsg}"
@@ -95,11 +95,11 @@ cleanworkspace() {
 #####################################
 
 sendBuildNotification() {
-     curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "siloId":${siloId}, "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'"}' --silent ${buildServiceURL}/sendBuildNotification)| {
+     curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "siloId":"'"${siloId}"'", "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'"}' --silent ${buildServiceURL}/sendBuildNotification)| {
      read body
      read code
      
-     if [[ $code != '200' ]]
+     if [ $code -ne 200 ]
      then
         errorMsg=$(echo ${body}|jq -r '.error.message')
    		echo "sendBuildAuditNotification service failed - ${errorMsg}"
@@ -112,11 +112,11 @@ sendBuildNotification() {
 }
 
 sendErrorEmail() {
-     curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "siloId":${siloId}, "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'","toEmailAddress":"'"${toEmailAddress}"'","errorMessage":"'"${errorMessage}"'"}' --silent ${buildServiceURL}/sendErrorEmail)| {
+     curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "siloId":"'"${siloId}"'", "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'","toEmailAddress":"'"${toEmailAddress}"'","errorMessage":"'"${errorMessage}"'"}' --silent ${buildServiceURL}/sendErrorEmail)| {
      read body
      read code
      
-     if [[ $code != '200' ]]
+     if [ $code -ne 200 ]
      then
         errorMsg=$(echo ${body}|jq -r '.error.message')
    		echo "sendErrorEmail service failed - ${errorMsg}"
@@ -131,11 +131,11 @@ updateBuildStatus() {
      buildStatus=$1
      reason=$2
      
-     curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "buildAuditReq":{"siloId":${siloId}, "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'"},"statusCode":"${buildStatus}", "buildAuditAddlData":{"reason":"'"${reason}"'"}}' --silent ${buildServiceURL}/updateBuildAudit) | {
+     curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -X POST -g -d '{ "buildAuditReq":{"siloId":"'"${siloId}"'", "buildNumber":"'"${buildNumber}"'", "pullReqNumber":"'"${pullReqNumber}"'"},"statusCode":"${buildStatus}", "buildAuditAddlData":{"reason":"'"${reason}"'"}}' --silent ${buildServiceURL}/updateBuildAudit) | {
      read body
      read code
      
-     if [[ $code != '200' ]]
+     if [ $code -ne 200 ]
      then
         errorMsg=$(echo ${body}|jq -r '.error.message')
    		echo "sendErrorEmail service failed - ${errorMsg}"

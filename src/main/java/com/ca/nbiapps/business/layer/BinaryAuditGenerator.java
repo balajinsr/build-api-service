@@ -53,7 +53,7 @@ public class BinaryAuditGenerator extends ModulesValidation {
 	 * @throws FileNotFoundException 
 	 * @throws GitAPIException 
 	 */
-	BinaryAuditGenerator(String basePath, BigInteger buildNumber, String taskId, List<DiffEntry> diffEntries) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {		
+	public BinaryAuditGenerator(String basePath, BigInteger buildNumber, String taskId, List<DiffEntry> diffEntries) throws FileNotFoundException, IOException, XmlPullParserException, GitAPIException {		
 		super(basePath,taskId, diffEntries);
 		this.setBuildNumber(buildNumber);
 		createSiloName();
@@ -221,5 +221,11 @@ public class BinaryAuditGenerator extends ModulesValidation {
 		this.binaryAudits = binaryAudits;
 	}
 	
+	public Set<ModuleDependency> getCommonJars() {
+		return commonJars;
+	}
 
+	public void setCommonJars(Set<ModuleDependency> commonJars) {
+		this.commonJars = commonJars;
+	}
 }
