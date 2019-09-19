@@ -16,44 +16,39 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ArtifactoryClient {
-	
-	@Value("${spring.artifactory.username}")
-	private String artifactoryUserName;
-	
-	@Value("${spring.artifactory.apiKey}")
+	@Value("${artifactory.apiKey}")
 	private String artifactoryAPIKey;
 	
-	@Value("${spring.artifactory.url}")
+	@Value("${artifactory.url}")
 	private String artifactoryURL;
 	
-	@Value("${spring.artifactory.readtimeout}")
+	@Value("${artifactory.readtimeout}")
 	private String readtimeout;
 	
-	@Value("${spring.artifactory.connectiontimeout}")
+	@Value("${artifactory.connectiontimeout}")
 	private String connectionTimeOut;
 	
-	@Value("${spring.artifactory.mavenrepo}")
+	@Value("${artifactory.mavenrepo}")
 	private String mavenrepo;
 	
 	private Artifactory artifactory;
 	
 
 	public void createArtifactory() {
-        if (StringUtils.isEmpty(artifactoryUserName) || StringUtils.isEmpty(artifactoryAPIKey) || StringUtils.isEmpty(artifactoryURL)){
+        if (StringUtils.isEmpty(artifactoryAPIKey) || StringUtils.isEmpty(artifactoryURL)){
             throw new IllegalArgumentException("Arguments passed to createArtifactory are not valid");
         }
          this.artifactory = ArtifactoryClientBuilder.create()
-                .setUrl(artifactoryURL)
-                .setUsername(artifactoryUserName)
-                .setAccessToken(artifactoryAPIKey)
+                .setUrl(artifactoryURL)  
+                .setPassword(artifactoryAPIKey)
                 .setSocketTimeout(Integer.valueOf(readtimeout))
                 .setConnectionTimeout(Integer.valueOf(connectionTimeOut))
                 .build();
     }
 	
-	public void uploadFile(String uploadFilePath, String uploadFileName) {
-		File file = new File(uploadFileName);
-		org.jfrog.artifactory.client.model.File result = artifactory.repository(mavenrepo).upload(uploadFilePath, file).doUpload();
+	public void uploadFile(String sourcePath, String targetUri) {
+		File sourceFilePath = new File(sourcePath);
+		org.jfrog.artifactory.client.model.File result = artifactory.repository(mavenrepo).upload(targetUri, sourceFilePath).doUpload();
 	}
 	
 	
