@@ -39,13 +39,13 @@ import org.springframework.web.client.RestTemplate;
 public class TriggerBuild {
 	private static final Logger logger = LoggerFactory.getLogger(TriggerBuild.class);
 	
-	@Value("${spring.jenkins.url}")
+	@Value("${jenkins.url}")
 	public String jenkinsURL;
 	
-	@Value("${spring.jenkins.username}")
+	@Value("${jenkins.username}")
 	public String jenkinsAuthenticationUserName;
 	
-	@Value("${spring.jenkins.token}")
+	@Value("${jenkins.token}")
 	public String jenkinsAuthenticationPassword;
 
 	public ResponseEntity<String> jenkinsRemoteAPIBuildWithParameters(String jobName, MultiValueMap<String, String> paramsMap) {	

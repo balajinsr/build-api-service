@@ -79,13 +79,13 @@ public class BuildServiceImpl implements BuildService {
 	@Autowired
 	BuildAuditDAO buildAuditDAO;
 	
-	@Value("${spring.allowed.filelist}")
+	@Value("${build.allowed.filelist}")
 	private String allowedFileList;
 	
-	@Value("${spring.build.workspace}")
+	@Value("${build.workspace}")
 	private String workspace;
 	
-	@Value("${spring.build.artifacts.location}")
+	@Value("${build.artifacts.location}")
 	private String artifactsLocation;
 	
 	
