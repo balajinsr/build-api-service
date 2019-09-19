@@ -37,6 +37,7 @@ public class ArtifactoryClient {
 	
 	private Artifactory artifactory;
 	
+
 	public void createArtifactory() {
         if (StringUtils.isEmpty(artifactoryUserName) || StringUtils.isEmpty(artifactoryAPIKey) || StringUtils.isEmpty(artifactoryURL)){
             throw new IllegalArgumentException("Arguments passed to createArtifactory are not valid");
@@ -66,5 +67,9 @@ public class ArtifactoryClient {
 			FileUtils.copyInputStreamToFile(inputStream, targetFile);
 		}
 		return targetFile;
+	}
+	
+	public void printArtifactoryInstance() {
+		System.out.println(artifactory);
 	}
 }
